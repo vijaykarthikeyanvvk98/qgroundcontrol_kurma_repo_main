@@ -108,8 +108,8 @@ Item {
 
         PipView {
             id:                     _pipView
-            anchors.left:           parent.left
-            anchors.bottom:         parent.bottom
+            anchors.right:           parent.right
+            anchors.verticalCenter: parent.verticalCenter
             anchors.margins:        _toolsMargin
             item1IsFullSettingsKey: "MainFlyWindowIsMap"
             item1:                  mapControl
@@ -189,4 +189,22 @@ Item {
             _root.utmspSendActTrigger = value
         }
     }
+
+    /*TelemetryValuesBar {
+            anchors.bottom:       parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottomMargin: 0.025*mainwindow.width
+            //extraWidth:             innerControl.extraValuesWidth
+            settingsGroup:          factValueGrid.telemetryBarSettingsGroup
+            specificVehicleForCard: null // Tracks active vehicle
+        }*/
+
+    FlyViewInstrumentPanel {
+            id:                 instrumentPanel
+            anchors.top:   parent.top
+            anchors.right: parent.right
+            anchors.topMargin: 0.1*mainwindow.width
+            anchors.rightMargin:  0.01*mainwindow.width
+            visible:            QGroundControl.corePlugin.options.flyView.showInstrumentPanel && _showSingleVehicleUI
+        }
 }

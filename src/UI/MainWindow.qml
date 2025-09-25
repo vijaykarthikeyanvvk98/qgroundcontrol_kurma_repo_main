@@ -26,6 +26,7 @@ import QGroundControl.FlightMap
 ApplicationWindow {
     id:             mainWindow
     visible:        true
+    title: "VCS"
 
     property bool   _utmspSendActTrigger
 
@@ -379,7 +380,7 @@ ApplicationWindow {
                             height:             toolSelectDialog._toolButtonHeight
                             Layout.fillWidth:   true
                             text:               qsTr("Application Settings")
-                            imageResource:      "/res/QGCLogoFull.svg"
+                            imageResource:      "/res/vikra_2.png"
                             imageColor:         "transparent"
                             visible:            !QGroundControl.corePlugin.options.combineSettingsAndSetup
                             onClicked: {
@@ -410,24 +411,24 @@ ApplicationWindow {
                             spacing:                0
                             Layout.alignment:       Qt.AlignHCenter
 
-                            QGCLabel {
+                            /*QGCLabel {
                                 id:                     versionLabel
-                                text:                   qsTr("%1 Version").arg(QGroundControl.appName)
+                                text:                   "VCS"//qsTr("%1 Version").arg(QGroundControl.appName)
                                 font.pointSize:         ScreenTools.smallFontPointSize
                                 wrapMode:               QGCLabel.WordWrap
                                 Layout.maximumWidth:    parent.width
                                 Layout.alignment:       Qt.AlignHCenter
-                            }
+                            }*/
 
-                            QGCLabel {
+                            /*QGCLabel {
                                 text:                   QGroundControl.qgcVersion
                                 font.pointSize:         ScreenTools.smallFontPointSize
                                 wrapMode:               QGCLabel.WrapAnywhere
                                 Layout.maximumWidth:    parent.width
                                 Layout.alignment:       Qt.AlignHCenter
-                            }
+                            }*/
 
-                            QGCLabel {
+                            /*QGCLabel {
                                 text:                   QGroundControl.qgcAppDate
                                 font.pointSize:         ScreenTools.smallFontPointSize
                                 wrapMode:               QGCLabel.WrapAnywhere
@@ -459,7 +460,7 @@ ApplicationWindow {
                                         showTouchAreasNotification.open()
                                     }
                                 }
-                            }
+                            }*/
                         }
                     }
                 }

@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     Platform::setupPreApp(args);
 
     QGCApplication app(argc, argv, args);
+    app.setWindowIcon(QIcon(":/res/vikra_2.png"));
 
     QGCLogging::installHandler();
 

@@ -23,7 +23,6 @@ import QGroundControl.Controls
 
 Item {
     id: root
-
     default property alias contentItem: mainLayout.data
 
     QGCFlickable {

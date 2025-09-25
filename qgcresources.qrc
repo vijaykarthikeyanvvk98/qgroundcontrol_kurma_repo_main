@@ -61,11 +61,18 @@
         <file alias="GripperRelease.svg">resources/GripperRelease.svg</file>
         <file alias="GripperGrab.svg">resources/GripperGrab.svg</file>
         <file alias="qgroundcontrol.ico">resources/icons/qgroundcontrol.ico</file>
+        <file alias="vikra_2.ico">resources/icons/vikra_2.ico</file>
+        <file alias="vikra_2.png">resources/icons/vikra_2.png</file>
+        <file alias="vikra_2.jpeg">resources/icons/vikra_2.jpeg</file>
+        <file alias="vikra_3.svg">resources/icons/vikra3.svg</file>
     </qresource>
     <qresource prefix="/res/firmware">
         <file alias="3drradio.png">resources/firmware/3drradio.png</file>
         <file alias="apm.png">resources/firmware/apm.png</file>
         <file alias="px4.png">resources/firmware/px4.png</file>
+        <file alias="vikra_2.ico">resources/icons/vikra_2.ico</file>
+        <file alias="vikra_2.png">resources/icons/vikra_2.png</file>
+        <file alias="vikra_2.jpeg">resources/icons/vikra_2.jpeg</file>
     </qresource>
     <qresource prefix="/res/calibration">
         <file alias="accel_back.png">resources/calibration/accel_back.png</file>

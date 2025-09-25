@@ -22,9 +22,9 @@ RowLayout {
         specificVehicleForCard: null // Tracks active vehicle
     }
 
-    FlyViewInstrumentPanel {
+    /*FlyViewInstrumentPanel {
         id:                 instrumentPanel
         Layout.alignment:   Qt.AlignBottom
         visible:            QGroundControl.corePlugin.options.flyView.showInstrumentPanel && _showSingleVehicleUI
-    }
+    }*/
 }
