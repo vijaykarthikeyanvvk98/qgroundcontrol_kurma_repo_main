@@ -153,7 +153,7 @@ ApplicationWindow {
     }
 
     function showSettingsTool(settingsPage = "") {
-        showTool(qsTr("Application Settings"), "qrc:/qml/QGroundControl/Controls/AppSettings.qml", "/res/QGCLogoWhite")
+        showTool(qsTr("Application Settings"), "qrc:/qml/QGroundControl/Controls/AppSettings.qml", "/res/vikra_2.png")
         if (settingsPage !== "") {
             toolDrawerLoader.item.showSettingsPage(settingsPage)
         }
@@ -788,10 +788,10 @@ ApplicationWindow {
                 }
             }
 
-            onClosing: {
+            /*Component.onClosing: {
                 visible = false
                 source = ""
-            }
+            }*/
         }
     }
 }

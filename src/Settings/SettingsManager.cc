@@ -31,6 +31,7 @@
 #include "UnitsSettings.h"
 #include "VideoSettings.h"
 #include "MavlinkSettings.h"
+#include "Winch.h"
 #ifdef QGC_VIEWER3D
 #include "Viewer3DSettings.h"
 #endif

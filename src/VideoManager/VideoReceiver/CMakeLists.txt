@@ -4,3 +4,4 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_
 
 add_subdirectory(GStreamer)
 add_subdirectory(QtMultimedia)
+add_subdirectory(Opencv)

@@ -142,7 +142,21 @@ find_package(Qt6
 if(LINUX)
     find_package(Qt6 COMPONENTS WaylandClient)
 endif()
+# ---------------- OpenCV Integration ----------------
+#set(OpenCV_DIR "D:/opencv-4.12.0/opencv-4.12.0/build")  # <- Change this to your OpenCV build folder
+set(OpenCV_DIR "C:/Users/vijay/Downloads/opencv/build7/install")
+set(OpenCV_BIN_DIR "C:/Users/vijay/Downloads/opencv/build7/install/x64/vc17/bin")
 
+find_package(OpenCV REQUIRED)
+if(OpenCV_FOUND)
+    #set(OpenCV_BIN_DIR "C:/Users/vijay/Downloads/opencv/build3/install/x64/vc17/bin")
+    message(STATUS "OpenCV version : ${OpenCV_VERSION}")
+    message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
+    message(STATUS "OpenCV include dir: ${OpenCV_INCLUDE_DIRS}")
+else()  
+    message(FATAL_ERROR "OpenCV not found. Please install OpenCV development packages")
+endif()
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 qt_standard_project_setup(
     REQUIRES ${QGC_QT_MINIMUM_VERSION}
     SUPPORTS_UP_TO ${QGC_QT_MAXIMUM_VERSION}
@@ -207,6 +221,13 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
         QtQuick.Controls
         QtQuick.Dialogs
         QtQuick.Layouts
+        SOURCES src/VideoManager/VideoReceiver/Opencv/videostreamer.cc src/VideoManager/VideoReceiver/Opencv/videostreamer.h
+        SOURCES src/VideoManager/VideoReceiver/Opencv/opencvimageprovider.h
+        SOURCES src/VideoManager/VideoReceiver/Opencv/opencvimageprovider.cc
+        SOURCES src/Settings/Winch.h
+        SOURCES src/Settings/Winch.cc
+        SOURCES src/VideoManager/VideoReceiver/Opencv/rovdriver.cpp
+        SOURCES src/VideoManager/VideoReceiver/Opencv/rovdriver.h
 )
 
 add_subdirectory(src)

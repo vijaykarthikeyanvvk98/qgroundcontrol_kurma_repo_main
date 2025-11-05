@@ -108,8 +108,8 @@ Item {
 
         PipView {
             id:                     _pipView
-            anchors.right:           parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.left:           parent.left
+            anchors.bottom: parent.bottom
             anchors.margins:        _toolsMargin
             item1IsFullSettingsKey: "MainFlyWindowIsMap"
             item1:                  mapControl
@@ -201,10 +201,10 @@ Item {
 
     FlyViewInstrumentPanel {
             id:                 instrumentPanel
-            anchors.top:   parent.top
+            anchors.bottom:   parent.bottom
             anchors.right: parent.right
-            anchors.topMargin: 0.1*mainwindow.width
-            anchors.rightMargin:  0.01*mainwindow.width
-            visible:            QGroundControl.corePlugin.options.flyView.showInstrumentPanel && _showSingleVehicleUI
+            anchors.bottomMargin: 0.1*mainWindow.width
+            anchors.rightMargin:  0.01*mainWindow.width
+            visible:            QGroundControl.corePlugin.options.flyView.showInstrumentPanel// && _showSingleVehicleUI
         }
 }

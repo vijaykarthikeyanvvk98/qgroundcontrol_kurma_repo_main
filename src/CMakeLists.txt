@@ -2,6 +2,10 @@ qt_add_library(QGroundControlModule STATIC)
 
 set_source_files_properties(UI/MainWindow.qml PROPERTIES QT_RESOURCE_ALIAS MainWindow.qml)
 
+target_link_libraries(QGroundControlModule PRIVATE Qt6::Core)
+target_link_libraries(QGroundControlModule PRIVATE Qt6::Core)
+target_link_libraries(QGroundControlModule PRIVATE Qt6::Core)
+
 qt_add_qml_module(QGroundControlModule
     URI QGroundControl
     VERSION 1.0
@@ -11,6 +15,9 @@ qt_add_qml_module(QGroundControlModule
     IMPORTS
         QGC
     NO_PLUGIN
+    SOURCES
+    SOURCES
+    SOURCES
 )
 
 add_subdirectory(ADSB)
@@ -151,6 +158,9 @@ target_precompile_headers(${CMAKE_PROJECT_NAME} PRIVATE pch.h)
 
 if(QGC_CUSTOM_BUILD)
     find_package(Qt6 REQUIRED COMPONENTS ${CUSTOM_QT_COMPONENTS})
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
     target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${CUSTOM_SOURCES})
     target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CUSTOM_LIBRARIES})
     target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CUSTOM_INCLUDE_DIRECTORIES})

@@ -47,13 +47,17 @@
 #include "Vehicle.h"
 #include "VehicleComponent.h"
 #include "VideoManager.h"
-
+#include "Opencv/videostreamer.h"      // Required for VideoStreamer
+#include "Opencv/opencvimageprovider.h" // Required for OpencvImageProvider
 #ifndef QGC_NO_SERIAL_LINK
 #include "SerialLink.h"
 #endif
 
 QGC_LOGGING_CATEGORY(QGCApplicationLog, "qgc.qgcapplication")
-
+// Pointers for your new objects, stored as members in QGCApplication (requires header update)
+VideoStreamer* _videoStreamer = nullptr;
+Worker* _worker = nullptr;
+OpencvImageProvider* _liveImageProvider = nullptr;
 QGCApplication::QGCApplication(int &argc, char *argv[], const QGCCommandLineParser::CommandLineParseResult &cli)
     : QApplication(argc, argv)
     , _runningUnitTests(cli.runningUnitTests)
@@ -255,6 +259,25 @@ void QGCApplication::_initForNormalAppBoot()
     MultiVehicleManager::instance()->init();
     _qmlAppEngine = QGCCorePlugin::instance()->createQmlApplicationEngine(this);
     QObject::connect(_qmlAppEngine, &QQmlApplicationEngine::objectCreationFailed, this, QCoreApplication::quit, Qt::QueuedConnection);
+    // --- START: YOUR VIDEO STREAMING IMPLEMENTATION ---
+
+            // 1. Initialize Objects (stored as member pointers for lifecycle management)
+    _videoStreamer = new VideoStreamer();
+    _liveImageProvider = new OpencvImageProvider(this);
+    _worker = new Worker();
+
+    qmlRegisterType<Worker>("Worker", 1, 0, "Worker");
+
+            // 2. Set Context Properties and Add Image Provider
+            // Expose the VideoStreamer instance to QML for calling start/stop methods
+    _qmlAppEngine->rootContext()->setContextProperty("VideoStreamer", _videoStreamer);
+    _qmlAppEngine->rootContext()->setContextProperty("liveImageProvider", _liveImageProvider);
+    //_qmlAppEngine->rootContext()->setContextProperty("Worker", _worker);
+
+            // Add the image provider for QML to request frames via "image://live/frame"
+    _qmlAppEngine->addImageProvider("live", _liveImageProvider);
+
+    //_videoStreamer->openVideoCamera(0);
     QGCCorePlugin::instance()->createRootWindow(_qmlAppEngine);
 
     AudioOutput::instance()->init(SettingsManager::instance()->appSettings()->audioMuted());
@@ -263,8 +286,14 @@ void QGCApplication::_initForNormalAppBoot()
     LinkManager::instance()->init();
     VideoManager::instance()->init(mainRootWindow());
 
-    // Image provider for Optical Flow
-    _qmlAppEngine->addImageProvider(_qgcImageProviderId, new QGCImageProvider());
+            // 3. Connect Signal to Slot
+            // Connect the C++ image signal to the image provider's update slot
+    QObject::connect(_videoStreamer,
+                     &VideoStreamer::newImage,
+                     _liveImageProvider,
+                     &OpencvImageProvider::updateImage);
+
+    // --- END: YOUR VIDEO STREAMING IMPLEMENTATION ---
 
     // Set the window icon now that custom plugin has a chance to override it
 #ifdef Q_OS_LINUX

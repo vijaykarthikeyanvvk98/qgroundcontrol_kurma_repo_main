@@ -32,6 +32,7 @@ DECLARE_SETTINGGROUP(Video, "Video")
     videoSourceList.append(videoSource3DRSolo);
     videoSourceList.append(videoSourceParrotDiscovery);
     videoSourceList.append(videoSourceYuneecMantisG);
+    videoSourceList.append(videoSourceOpenCV);
 
     #ifdef QGC_HERELINK_AIRUNIT_VIDEO
         videoSourceList.append(videoSourceHerelinkAirUnit);
@@ -181,6 +182,15 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, tcpUrl)
     return _tcpUrlFact;
 }
 
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, opencv)
+{
+    if (!_opencvFact) {
+        _opencvFact = _createSettingsFact(opencvName);
+        connect(_opencvFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _opencvFact;
+}
+
 bool VideoSettings::streamConfigured(void)
 {
     //-- First, check if it's autoconfigured
@@ -201,7 +211,15 @@ bool VideoSettings::streamConfigured(void)
     //-- If RTSP, check for URL
     if(vSource == videoSourceRTSP) {
         qCDebug(VideoManagerLog) << "Testing configuration for RTSP Stream:" << rtspUrl()->rawValue().toString();
+        //qDebug() << "Testing configuration for OpenCV RTSP Stream:" << opencv()->rawValue().toString();
         return !rtspUrl()->rawValue().toString().isEmpty();
+    }
+    //-- If Opencv, check for URL
+    if(vSource == videoSourceOpenCV) {
+        qCDebug(VideoManagerLog) << "Testing configuration for OpenCV RTSP Stream:" << opencv()->rawValue().toString();
+        //qDebug() << "Testing configuration for OpenCV RTSP Stream:" << opencv()->rawValue().toString();
+        //return !opencv()->rawValue().toString().isEmpty();
+        return true;
     }
     //-- If TCP, check for URL
     if(vSource == videoSourceTCP) {

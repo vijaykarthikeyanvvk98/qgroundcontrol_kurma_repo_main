@@ -32,6 +32,13 @@
     "default":     ""
 },
 {
+    "name":             "opencv",
+    "shortDesc": "Video opencv Url",
+    "longDesc":  "opencv url address and port to bind to for video stream. Example: 192.168.143.200:3001",
+    "type":             "string",
+    "default":     ""
+},
+{
     "name":             "videoSavePath",
     "shortDesc": "Video save directory",
     "longDesc":  "Directory to save videos to.",

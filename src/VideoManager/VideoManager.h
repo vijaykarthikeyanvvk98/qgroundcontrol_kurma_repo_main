@@ -49,6 +49,8 @@ class VideoManager : public QObject
     Q_PROPERTY(QSize    videoSize               READ videoSize                                  NOTIFY videoSizeChanged)
     Q_PROPERTY(QString  imageFile               READ imageFile                                  NOTIFY imageFileChanged)
     Q_PROPERTY(QString  uvcVideoSourceID        READ uvcVideoSourceID                           NOTIFY uvcVideoSourceIDChanged)
+    Q_PROPERTY(QRectF   rectangle_box           READ rectangle_box                              NOTIFY rectangle_boxChanged)
+    Q_PROPERTY(bool     detect                  READ detect                                     NOTIFY detectChanged)
 
 public:
     explicit VideoManager(QObject *parent = nullptr);
@@ -84,7 +86,8 @@ public:
     static bool gstreamerEnabled();
     static bool qtmultimediaEnabled();
     static bool uvcEnabled();
-
+    QRectF rectangle_box() { return _rectangle;}
+    bool detect() {return is_detect;}
 signals:
     void aspectRatioChanged();
     void autoStreamConfiguredChanged();
@@ -100,7 +103,8 @@ signals:
     void streamingChanged();
     void uvcVideoSourceIDChanged();
     void videoSizeChanged();
-
+    void rectangle_boxChanged();
+    void detectChanged();
 private slots:
     void _communicationLostChanged(bool communicationLost);
     void _setActiveVehicle(Vehicle *vehicle);
@@ -132,6 +136,8 @@ private:
     QString _imageFile;
     QString _uvcVideoSourceID;
     Vehicle *_activeVehicle = nullptr;
+    QRectF _rectangle={0,0,0.0,0.0};
+    bool is_detect=false;
 };
 
 /*===========================================================================*/

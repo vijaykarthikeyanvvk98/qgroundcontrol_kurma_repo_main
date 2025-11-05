@@ -38,6 +38,7 @@ public:
     DEFINE_SETTINGFACT(disableWhenDisarmed)
     DEFINE_SETTINGFACT(lowLatencyMode)
     DEFINE_SETTINGFACT(forceVideoDecoder)
+    DEFINE_SETTINGFACT(opencv)
 
     Q_PROPERTY(bool     streamConfigured        READ streamConfigured       NOTIFY streamConfiguredChanged)
     Q_PROPERTY(QString  rtspVideoSource         READ rtspVideoSource        CONSTANT)
@@ -46,12 +47,14 @@ public:
     Q_PROPERTY(QString  tcpVideoSource          READ tcpVideoSource         CONSTANT)
     Q_PROPERTY(QString  mpegtsVideoSource       READ mpegtsVideoSource      CONSTANT)
     Q_PROPERTY(QString  disabledVideoSource     READ disabledVideoSource    CONSTANT)
+    Q_PROPERTY(QString  opencvVideoSource       READ opencvVideoSource      CONSTANT)
 
     bool     streamConfigured       ();
     QString  rtspVideoSource        () { return videoSourceRTSP; }
     QString  udp264VideoSource      () { return videoSourceUDPH264; }
     QString  udp265VideoSource      () { return videoSourceUDPH265; }
     QString  tcpVideoSource         () { return videoSourceTCP; }
+    QString  opencvVideoSource      () { return videoSourceOpenCV; }
     QString  mpegtsVideoSource      () { return videoSourceMPEGTS; }
     QString  disabledVideoSource    () { return videoDisabled; }
 
@@ -67,6 +70,8 @@ public:
     static constexpr const char* videoSourceYuneecMantisG     = QT_TRANSLATE_NOOP("VideoSettings", "Yuneec Mantis G");
     static constexpr const char* videoSourceHerelinkAirUnit   = QT_TRANSLATE_NOOP("VideoSettings", "Herelink AirUnit");
     static constexpr const char* videoSourceHerelinkHotspot   = QT_TRANSLATE_NOOP("VideoSettings", "Herelink Hotspot");
+    static constexpr const char* videoSourceOpenCV            = QT_TRANSLATE_NOOP("VideoSettings", "Object Detection");
+
 
 signals:
     void streamConfiguredChanged    (bool configured);

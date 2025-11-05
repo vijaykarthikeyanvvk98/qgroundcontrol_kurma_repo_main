@@ -13,6 +13,7 @@
 #include <QtCore/QSize>
 #include <QtCore/QTimer>
 #include <QtQmlIntegration/QtQmlIntegration>
+#include "rovdriver.h"
 
 class QGCVideoStreamInfo;
 class QQuickItem;
@@ -92,6 +93,8 @@ signals:
     void onStartRecordingComplete(STATUS status);
     void onStopRecordingComplete(STATUS status);
     void onTakeScreenshotComplete(STATUS status);
+    void is_rectangle(QRectF);
+    void is_box(bool);
 
 public slots:
     virtual void start(uint32_t timeout) = 0;

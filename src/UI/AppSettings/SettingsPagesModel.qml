@@ -122,5 +122,12 @@ ListModel {
         iconUrl: "qrc:/InstrumentValueIcons/photo.svg"
         pageVisible: function() { return ScreenTools.isDebug }
     }
+
+    ListElement {
+        name: qsTr("Winch Control")
+        url: "qrc:/qml/QGroundControl/AppSettings/WinchSettings.qml"
+        iconUrl: "qrc:/InstrumentValueIcons/photo.svg"
+        pageVisible: function() { return ScreenTools.isDebug }
+    }
 }
 

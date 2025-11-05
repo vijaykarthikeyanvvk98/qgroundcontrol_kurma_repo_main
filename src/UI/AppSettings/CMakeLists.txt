@@ -27,5 +27,6 @@ qt_add_qml_module(AppSettingsModule
         TelemetrySettings.qml
         UdpSettings.qml
         VideoSettings.qml
+        WinchSettings.qml
     NO_PLUGIN
 )
