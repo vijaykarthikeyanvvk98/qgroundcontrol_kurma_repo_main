@@ -13,20 +13,13 @@ public:
 
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 
-    Q_PROPERTY(QRectF rectangle READ rectangle NOTIFY rectangleChanged)
-   public:
-    QRectF m_rectangle;
-    bool isdetected=false;
-    QRectF rectangle() const;
-    void setRectangle(const QRectF &rect);
+
 public slots:
     void updateImage(const QImage &image);
 
 signals:
     void imageChanged();
     void null_image_changed();
-    void box_detected();
-    void rectangleChanged();
 
 private:
     QImage image;

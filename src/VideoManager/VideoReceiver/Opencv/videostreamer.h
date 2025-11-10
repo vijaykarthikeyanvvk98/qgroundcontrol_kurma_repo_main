@@ -106,8 +106,7 @@ class VideoStreamer : public VideoReceiver
     void rov_follow2(QPointF,QPointF);
 
     bool isdetected=false;
-    IOUTracker iouTracker;
-    int frame_idx = 0;
+
     ROVDriver rov;
 
     //ROVDriver rov;     // create an instance;
@@ -162,6 +161,8 @@ class Worker: public VideoReceiver
     ~Worker();
    public:
     QRectF m_rectangle;
+    IOUTracker iouTracker;
+    int frame_idx = 0;
     bool isdetected=false;
     QRectF rectangle() const;
     bool detect();

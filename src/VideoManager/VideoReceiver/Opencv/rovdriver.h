@@ -9,6 +9,8 @@
 #include "mavlink.h"
 #include <QUdpSocket>
 
+class Vehicle;
+
 class ROVDriver : public QThread {
     Q_OBJECT
 
@@ -48,4 +50,6 @@ private:
     QUdpSocket *udpSocket = nullptr;   // <-- added
     QHostAddress rovAddress;
     quint16 rovPort;
+    Vehicle *_activeVehicle = nullptr;
+
 };

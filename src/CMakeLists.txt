@@ -18,6 +18,8 @@ qt_add_qml_module(QGroundControlModule
     SOURCES
     SOURCES
     SOURCES
+    SOURCES
+    SOURCES
 )
 
 add_subdirectory(ADSB)

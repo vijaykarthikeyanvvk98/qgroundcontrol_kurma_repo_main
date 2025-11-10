@@ -24,6 +24,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp> // Video write#include <iostream>
 #include <opencv2/cudaobjdetect.hpp>
+#include <numeric>
+
 using namespace cv;
 using namespace dnn;
 using namespace std;
@@ -189,7 +191,7 @@ void FPSMeter::tick() {
 
 double FPSMeter::fps() {
     if(times.empty()) return 0.0;
-    double avg = accumulate(times.begin(), times.end(), 0.0)/times.size();
+    double avg = std::accumulate(times.begin(), times.end(), 0.0, [](double a, double b){ return a + b; }) / times.size();
     return avg>0 ? 1.0/avg : 0.0;
 }
 
@@ -198,8 +200,8 @@ double FPSMeter::fps() {
 VideoStreamer::VideoStreamer(QObject *parent)
 {
     // set target for ROV
-    rov.setTarget("192.168.2.2", 14550);
-    rov.start();
+    //rov.setTarget("192.168.2.2", 14550);
+    //rov.start();
     // Initialize with a default rectangle from C++
     m_rectangle = QRectF(0.0, 0.0, 10.0, 10.0);
     threadStreamer  = new QThread();
@@ -236,6 +238,7 @@ VideoStreamer::~VideoStreamer()
 
     rov.stop();
     rov.wait();
+
 }
 
 void VideoStreamer::streamVideo()

@@ -205,6 +205,70 @@ Item {
             anchors.right: parent.right
             anchors.bottomMargin: 0.1*mainWindow.width
             anchors.rightMargin:  0.01*mainWindow.width
-            visible:            QGroundControl.corePlugin.options.flyView.showInstrumentPanel// && _showSingleVehicleUI
+            visible:    winchLoader.active?false:        QGroundControl.corePlugin.options.flyView.showInstrumentPanel// && _showSingleVehicleUI
         }
+
+    QGCButton
+    {
+        anchors.left: parent.left
+        anchors.leftMargin:_toolsMargin
+        anchors.verticalCenter: parent.verticalCenter
+        contentItem: Text {
+            id: response_button2
+            text: "Winch"
+            font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+            font.bold: true
+            //font.pixelSize: font_size
+            style: Text.Sunken
+            color: "White"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle
+        {
+            color:"#4287f5"
+            radius:0.005*parent.width
+            border.color:"#000000"
+            border.width:0.05*parent.width
+        }
+
+        MouseArea
+        {
+            anchors.fill: parent
+
+            onClicked:
+            {
+                winchLoader.source ="WinchSettings.qml"
+                winchLoader.active = true
+            }
+        }
+    }
+
+
+    // Loader to show Winch page
+    Loader {
+        id: winchLoader
+        anchors.fill: parent
+        visible: active
+        active: false
+        //z: QGroundControl.zOrderTopMost
+        source: active ? "WinchSettings.qml" : ""
+
+        onLoaded: {
+            if (item) {
+                //item.parent = winchLoader
+                //item.closeRequested.connect(() => winchLoader.active = false)
+            }
+        }
+    }
+
+
+    Connections {
+        target: winchLoader.item
+
+        function onClosed() {
+                winchLoader.source =""
+                winchLoader.active = false
+        }
+    }
 }

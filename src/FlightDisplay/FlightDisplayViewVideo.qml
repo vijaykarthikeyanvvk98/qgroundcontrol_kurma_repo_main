@@ -17,7 +17,7 @@ import QGroundControl.FlightMap
 
 import QGroundControl.Controls
 
-import Worker 1.0
+//import Worker 1.0
 
 
 

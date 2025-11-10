@@ -228,6 +228,8 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
         SOURCES src/Settings/Winch.cc
         SOURCES src/VideoManager/VideoReceiver/Opencv/rovdriver.cpp
         SOURCES src/VideoManager/VideoReceiver/Opencv/rovdriver.h
+        SOURCES src/WinchSettings.h
+        SOURCES src/WinchSettings.cpp
 )
 
 add_subdirectory(src)

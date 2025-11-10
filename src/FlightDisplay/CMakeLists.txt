@@ -64,4 +64,5 @@ qt_add_qml_module(FlightDisplayModule
         VehicleWarnings.qml
         VirtualJoystick.qml
     NO_PLUGIN
+    QML_FILES WinchSettings.qml
 )

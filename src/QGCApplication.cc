@@ -49,6 +49,7 @@
 #include "VideoManager.h"
 #include "Opencv/videostreamer.h"      // Required for VideoStreamer
 #include "Opencv/opencvimageprovider.h" // Required for OpencvImageProvider
+#include "WinchSettings.h"
 #ifndef QGC_NO_SERIAL_LINK
 #include "SerialLink.h"
 #endif
@@ -57,6 +58,7 @@ QGC_LOGGING_CATEGORY(QGCApplicationLog, "qgc.qgcapplication")
 // Pointers for your new objects, stored as members in QGCApplication (requires header update)
 VideoStreamer* _videoStreamer = nullptr;
 Worker* _worker = nullptr;
+WinchSettings* _winchsettings=nullptr;
 OpencvImageProvider* _liveImageProvider = nullptr;
 QGCApplication::QGCApplication(int &argc, char *argv[], const QGCCommandLineParser::CommandLineParseResult &cli)
     : QApplication(argc, argv)
@@ -265,13 +267,15 @@ void QGCApplication::_initForNormalAppBoot()
     _videoStreamer = new VideoStreamer();
     _liveImageProvider = new OpencvImageProvider(this);
     _worker = new Worker();
+    //_winchsettings = new WinchSettings(this);
 
-    qmlRegisterType<Worker>("Worker", 1, 0, "Worker");
-
+    //qmlRegisterType<Worker>("Worker", 1, 0, "Worker");
+    qmlRegisterType<WinchSettings>("com.Winch", 1, 0, "Winch");
             // 2. Set Context Properties and Add Image Provider
             // Expose the VideoStreamer instance to QML for calling start/stop methods
     _qmlAppEngine->rootContext()->setContextProperty("VideoStreamer", _videoStreamer);
     _qmlAppEngine->rootContext()->setContextProperty("liveImageProvider", _liveImageProvider);
+    //_qmlAppEngine->rootContext()->setContextProperty("Winchsettings", _winchsettings);
     //_qmlAppEngine->rootContext()->setContextProperty("Worker", _worker);
 
             // Add the image provider for QML to request frames via "image://live/frame"

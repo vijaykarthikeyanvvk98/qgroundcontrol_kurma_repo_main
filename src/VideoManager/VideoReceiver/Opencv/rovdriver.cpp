@@ -1,5 +1,21 @@
 #include "rovdriver.h"
+#include "MavlinkAction.h"
+#include "MavlinkActionManager.h"
+#include "MavlinkActionsSettings.h"
+#include "FirmwarePlugin.h"
+#include "GimbalController.h"
+#include "MultiVehicleManager.h"
+#include "QGCCorePlugin.h"
+#include "QGCLoggingCategory.h"
+#include "QmlObjectListModel.h"
+#include "SettingsManager.h"
+#include "Vehicle.h"
 
+#include <QtCore/QSettings>
+#include <QtCore/QThread>
+
+/*QGC_LOGGING_CATEGORY(JoystickLog, "qgc.joystick.joystick")
+QGC_LOGGING_CATEGORY(JoystickValuesLog, "qgc.joystick.joystickvalues")*/
 ROVDriver::ROVDriver(QObject *parent)
     : QThread(parent), running(true), connected(false), rc_channels(8, 1500)
 {
@@ -122,6 +138,12 @@ void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCente
 
     //qDebug()<<throttle<<steer;
     sendRC(throttle, steer);
+    float yaw;
+    float pitch;
+    float roll;
+
+    //_activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, 0, 0);
+
 }
 
 void ROVDriver::executeCommand(const Command &cmd) {
@@ -159,7 +181,7 @@ void ROVDriver::setRCChannel(const QString &name, int value) {
 }
 
 void ROVDriver::sendRCOverride() {
-    qDebug() << "RC Override:" << rc_channels;
+    //qDebug() << "RC Override:" << rc_channels;
     if (!udpSocket) {
         qWarning() << "UDP socket not initialized!";
         return;

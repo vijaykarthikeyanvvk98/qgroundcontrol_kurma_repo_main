@@ -21,15 +21,7 @@ QImage OpencvImageProvider::requestImage(const QString &id, QSize *size, const Q
     return image;
 }
 
-QRectF OpencvImageProvider::rectangle() const
-{
-    return m_rectangle;
-}
 
-void OpencvImageProvider::setRectangle(const QRectF &rect)
-{
-
-}
 
 void OpencvImageProvider::updateImage(const QImage &image)
 {
