@@ -13,7 +13,6 @@
 #include <QtCore/QSize>
 #include <QtCore/QTimer>
 #include <QtQmlIntegration/QtQmlIntegration>
-#include "rovdriver.h"
 
 class QGCVideoStreamInfo;
 class QQuickItem;
@@ -46,6 +45,8 @@ public:
     void setStarted(bool started) { if (started != _started) { _started = started; emit startedChanged(_started); } }
     void setLowLatency(bool lowLatency) { if (lowLatency != _lowLatency) { _lowLatency = lowLatency; emit lowLatencyChanged(_lowLatency); } }
     void setVideoStreamInfo(QGCVideoStreamInfo *videoStreamInfo) { if (videoStreamInfo != _videoStreamInfo) { _videoStreamInfo = videoStreamInfo; emit videoStreamInfoChanged(); } }
+    void set_track(bool value){/*static int val;*/track_mode=value;/*qDebug()<<track_mode;*/}
+    void onTrackChanged(bool value){set_track(value);};
 
     // QMediaFormat::FileFormat
     enum FILE_FORMAT {
@@ -95,7 +96,6 @@ signals:
     void onTakeScreenshotComplete(STATUS status);
     void is_rectangle(QRectF);
     void is_box(bool);
-
 public slots:
     virtual void start(uint32_t timeout) = 0;
     virtual void stop() = 0;
@@ -132,6 +132,8 @@ protected:
     uint32_t _timeout = 0;
     QString _recordingOutput;
 
+   public:
+    bool track_mode=false;
     // bool _initialized = false;
     // bool _fullScreen = false;
     // QSize _videoSize;

@@ -210,12 +210,13 @@ Item {
 
     QGCButton
     {
+        id:winch_button
         anchors.left: parent.left
         anchors.leftMargin:_toolsMargin
         anchors.verticalCenter: parent.verticalCenter
         contentItem: Text {
             id: response_button2
-            text: "Winch"
+            text: "  Winch  "
             font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
             font.bold: true
             //font.pixelSize: font_size
@@ -244,11 +245,57 @@ Item {
         }
     }
 
+    QGCButton
+    {
+        id:track_button
+        anchors.left: parent.left
+        anchors.leftMargin:_toolsMargin
+        anchors.top: winch_button.bottom
+        anchors.topMargin: _toolsMargin
+        property bool _clicked: false
+        contentItem: Text {
+            id: response_button3
+            text:track_button._clicked?"Stop\nTracking":"Start\nTracking"
+            font.pixelSize: response_button2.font.pixelSize
+            font.bold: true
+            style: Text.Sunken
+            color: "White"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle
+        {
+            color:"#4287f5"
+            radius:0.005*parent.width
+            border.color:"#000000"
+            border.width:0.05*parent.width
+        }
+
+        MouseArea
+        {
+            anchors.fill: parent
+
+            onClicked:
+            {
+                if(!track_button._clicked)
+                    QGroundControl.videoManager.track = true
+                else
+                    QGroundControl.videoManager.track = false
+
+                track_button._clicked =!track_button._clicked
+
+            }
+        }
+    }
 
     // Loader to show Winch page
     Loader {
         id: winchLoader
-        anchors.fill: parent
+        width:parent.width/2.5
+        height:parent.height/2
+        anchors.left: track_button.right
+        anchors.leftMargin: _toolsMargin
+        anchors.verticalCenter: parent.verticalCenter
         visible: active
         active: false
         //z: QGroundControl.zOrderTopMost

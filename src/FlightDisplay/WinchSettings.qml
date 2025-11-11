@@ -19,7 +19,20 @@ Rectangle
     height:parent.height
     signal closed;
 
-    color: "grey"
+    color: "transparent"
+    //opacity: 0.4
+
+    Rectangle
+    {
+        width:parent.width
+        height:parent.height
+        signal closed;
+
+        color: "black"
+        opacity: 0.4
+        radius:0.01*parent.width
+
+    }
     QGCButton {
         id: close
         anchors
@@ -32,7 +45,8 @@ Rectangle
         contentItem: Text {
             id: response_button2
             text: "Exit"
-            font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+            font.pixelSize: Math.min(winchdisplay.width / 60,
+                                     winchdisplay.height / 50)
             font.bold: true
             //font.pixelSize: font_size
             style: Text.Sunken
@@ -71,7 +85,7 @@ Rectangle
         anchors
         {
             left:parent.left
-            top:parent.top
+            top:close.bottom
             margins:_toolsMargin
         }
 
@@ -93,37 +107,7 @@ Rectangle
                                          winchdisplay.height / 50)
             }
 
-            QGCButton
-            {
-                id:stop1
-                contentItem: Text {
-                    id: response_button4
-                    text: "Stop"
-                    font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
-                    font.bold: true
-                    //font.pixelSize: font_size
-                    style: Text.Sunken
-                    color: "White"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle
-                {
-                    color:"#4287f5"
-                    radius:0.005*parent.width
-                    border.color:"#000000"
-                    border.width:0.05*parent.width
-                }
-                MouseArea
-                {
-                    anchors.fill: parent
 
-                    onClicked:
-                    {
-                        _winch.run_motor(0)
-                    }
-                }
-            }
 
             QGCButton
             {
@@ -131,7 +115,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button5
                     text: "Forward"
-                    font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+                    font.pixelSize: Math.min(winchdisplay.width / 60,
+                                             winchdisplay.height / 50)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -159,11 +144,45 @@ Rectangle
 
             QGCButton
             {
+                id:stop1
+                contentItem: Text {
+                    id: response_button4
+                    text: "Stop"
+                    font.pixelSize: Math.min(winchdisplay.width / 60,
+                                             winchdisplay.height / 50)
+                    font.bold: true
+                    //font.pixelSize: font_size
+                    style: Text.Sunken
+                    color: "White"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle
+                {
+                    color:"#4287f5"
+                    radius:0.005*parent.width
+                    border.color:"#000000"
+                    border.width:0.05*parent.width
+                }
+                MouseArea
+                {
+                    anchors.fill: parent
+
+                    onClicked:
+                    {
+                        _winch.run_motor(0)
+                    }
+                }
+            }
+
+            QGCButton
+            {
                 id:backward1
                 contentItem: Text {
                     id: response_button3
                     text: "Backward"
-                    font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+                    font.pixelSize: Math.min(winchdisplay.width / 60,
+                                             winchdisplay.height / 50)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -208,37 +227,7 @@ Rectangle
                                          winchdisplay.height / 50)
             }
 
-            QGCButton
-            {
-                id:stop2
-                contentItem: Text {
-                    id: response_button6
-                    text: "Stop"
-                    font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
-                    font.bold: true
-                    //font.pixelSize: font_size
-                    style: Text.Sunken
-                    color: "White"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle
-                {
-                    color:"#4287f5"
-                    radius:0.005*parent.width
-                    border.color:"#000000"
-                    border.width:0.05*parent.width
-                }
-                MouseArea
-                {
-                    anchors.fill: parent
 
-                    onClicked:
-                    {
-                        _winch.run_actuator(0)
-                    }
-                }
-            }
 
             QGCButton
             {
@@ -246,7 +235,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button7
                     text: "Forward"
-                    font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+                    font.pixelSize: Math.min(winchdisplay.width / 60,
+                                             winchdisplay.height / 50)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -271,14 +261,46 @@ Rectangle
                     }
                 }
             }
+            QGCButton
+            {
+                id:stop2
+                contentItem: Text {
+                    id: response_button6
+                    text: "Stop"
+                    font.pixelSize: Math.min(winchdisplay.width / 60,
+                                             winchdisplay.height / 50)
+                    font.bold: true
+                    //font.pixelSize: font_size
+                    style: Text.Sunken
+                    color: "White"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle
+                {
+                    color:"#4287f5"
+                    radius:0.005*parent.width
+                    border.color:"#000000"
+                    border.width:0.05*parent.width
+                }
+                MouseArea
+                {
+                    anchors.fill: parent
 
+                    onClicked:
+                    {
+                        _winch.run_actuator(0)
+                    }
+                }
+            }
             QGCButton
             {
                 id:backward2
                 contentItem: Text {
                     id: response_button8
                     text: "Backward"
-                    font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+                    font.pixelSize: Math.min(winchdisplay.width / 60,
+                                             winchdisplay.height / 50)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken

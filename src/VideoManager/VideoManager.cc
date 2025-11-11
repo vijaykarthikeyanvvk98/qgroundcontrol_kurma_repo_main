@@ -304,6 +304,15 @@ bool VideoManager::uvcEnabled()
     return UVCReceiver::enabled();
 }
 
+void VideoManager::set_track(bool value)
+{
+    is_track = value;
+    //qDebug()<<value<<is_track;
+   emit trackChanged(is_track);
+}
+
+
+
 bool VideoManager::qtmultimediaEnabled()
 {
     return QtMultimediaReceiver::enabled();
@@ -809,6 +818,9 @@ void VideoManager::_initVideoReceiver(VideoReceiver *receiver, QQuickWindow *win
         is_detect = detected;
         emit detectChanged();
     });
+    QObject::disconnect(this, &VideoManager::trackChanged, nullptr, nullptr);
+    connect(this, &VideoManager::trackChanged, receiver, &VideoReceiver::onTrackChanged);
+
 
     (void) _updateSettings(receiver);
 

@@ -41,6 +41,7 @@ double ref_scale = 0.2; // 20% of frame size (tunable)
 
 
 static int frameCount = 0;
+static bool track_confirm=false;
 // --------------------------------
 cv::Mat frame,newFrame,frame_to_be_processed;
 QTimer tUpdate;
@@ -246,6 +247,7 @@ void VideoStreamer::streamVideo()
         if (!frame.empty()) {
             QImage img = QImage(frame.data, frame.cols, frame.rows, QImage::Format_RGB888).rgbSwapped();
             emit newImage(img);
+            track_confirm = track_mode;
         } else {
         }
 }
@@ -1023,7 +1025,8 @@ void Worker::grabImage()
                     QPointF  frame_center(frameCopy.cols / 2.0, frameCopy.rows / 2.0);
                     QPointF  obj_center(tracked_box.x + tracked_box.width / 2.0,
                                        tracked_box.y + tracked_box.height / 2.0);
-                    emit rov_follow(frame_center,obj_center);
+                    if(track_confirm)
+                        emit rov_follow(frame_center,obj_center);
                     //rov.followDiver(frame_center, obj_center);
 
                     /*double offset_x = obj_center.x - frame_center.x; // horizontal
