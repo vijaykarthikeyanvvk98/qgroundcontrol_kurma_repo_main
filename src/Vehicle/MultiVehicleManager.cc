@@ -269,6 +269,14 @@ void MultiVehicleManager::setActiveVehicle(Vehicle *vehicle)
     }
 }
 
+void MultiVehicleManager::setobj_det(bool value)
+{
+    is_det_track=value;
+    _activeVehicle->set_obj_mode(is_det_track);
+    //qDebug()<<is_det_track;
+}
+
+
 void MultiVehicleManager::_setActiveVehiclePhase2(Vehicle *vehicle)
 {
     qCDebug(MultiVehicleManagerLog) << Q_FUNC_INFO << vehicle;

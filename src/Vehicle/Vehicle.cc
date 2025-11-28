@@ -81,6 +81,7 @@ QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 #define REQUEST_OPERATOR_CONTROL_ALLOW_TAKEOVER_TIMEOUT_MSECS 10000
 
 const QString guided_mode_not_supported_by_vehicle = QObject::tr("Guided mode not supported by Vehicle.");
+static bool obj_command = false;
 
 // Standard connected vehicle
 Vehicle::Vehicle(LinkInterface*             link,
@@ -373,6 +374,13 @@ Vehicle::~Vehicle()
 
     delete _autopilotPlugin;
     _autopilotPlugin = nullptr;
+}
+
+void Vehicle::set_obj_mode(bool value)
+{
+    obj_command = value;
+    //setJoystickEnabled(obj_command);
+    //qDebug()<<"Obj"<<value;
 }
 
 void Vehicle::_deleteCameraManager()
@@ -3864,7 +3872,6 @@ void Vehicle::clearAllParamMapRC(void)
 
 void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, float thrust, quint16 buttons, quint16 buttons2)
 {
-    qDebug()<<roll<<thrust;
     SharedLinkInterfacePtr sharedLink = vehicleLinkManager()->primaryLink().lock();
     if (!sharedLink) {
         qCDebug(VehicleLog)<< "sendJoystickDataThreadSafe: primary link gone!";
@@ -3877,7 +3884,7 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
 
     mavlink_message_t message;
 
-    // Incoming values are in the range -1:1
+            // Incoming values are in the range -1:1
     float axesScaling =         1.0 * 1000.0;
     float newRollCommand =      roll * axesScaling;
     float newPitchCommand  =    pitch * axesScaling;    // Joystick data is reverse of mavlink values
@@ -3898,8 +3905,52 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
         0,
         0, 0,
         0, 0, 0, 0, 0, 0
-    );
+        );
     sendMessageOnLinkThreadSafe(sharedLink.get(), message);
+}
+
+void Vehicle::sendtrackingDataThreadSafe(float roll, float pitch, float yaw, float thrust, quint16 buttons, quint16 buttons2)
+{
+
+    qDebug()<<roll<<thrust;
+    if (!_joystickEnabled) {
+
+    SharedLinkInterfacePtr sharedLink = vehicleLinkManager()->primaryLink().lock();
+    if (!sharedLink) {
+        qCDebug(VehicleLog)<< "sendtrackingDataThreadSafe: primary link gone!";
+        return;
+    }
+
+    if (sharedLink->linkConfiguration()->isHighLatency()) {
+        return;
+    }
+
+    mavlink_message_t message;
+
+            // Incoming values are in the range -1:1
+    float axesScaling =         1.0 * 1000.0;
+    float newRollCommand =      roll * axesScaling;
+    float newPitchCommand  =    pitch * axesScaling;    // Joystick data is reverse of mavlink values
+    float newYawCommand    =    yaw * axesScaling;
+    float newThrustCommand =    thrust * axesScaling;
+
+    mavlink_msg_manual_control_pack_chan(
+        static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+        static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+        sharedLink->mavlinkChannel(),
+        &message,
+        static_cast<uint8_t>(_id),
+        static_cast<int16_t>(newPitchCommand),
+        static_cast<int16_t>(newRollCommand),
+        static_cast<int16_t>(newThrustCommand),
+        static_cast<int16_t>(newYawCommand),
+        buttons, buttons2,
+        0,
+        0, 0,
+        0, 0, 0, 0, 0, 0
+        );
+    sendMessageOnLinkThreadSafe(sharedLink.get(), message);
+    }
 }
 
 void Vehicle::triggerSimpleCamera()

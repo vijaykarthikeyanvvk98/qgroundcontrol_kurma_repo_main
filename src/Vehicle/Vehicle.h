@@ -128,7 +128,7 @@ public:
             QObject*                parent = nullptr);
 
     ~Vehicle();
-
+    void set_obj_mode(bool);
     enum CheckList {
         CheckListNotSetup = 0,
         CheckListPassed,
@@ -446,6 +446,7 @@ public:
     bool joystickEnabled            () const;
     void setJoystickEnabled         (bool enabled);
     void sendJoystickDataThreadSafe (float roll, float pitch, float yaw, float thrust, quint16 buttons, quint16 buttons2);
+    void sendtrackingDataThreadSafe (float roll, float pitch, float yaw, float thrust, quint16 buttons, quint16 buttons2);
 
     // Property accesors
     int id() const{ return _id; }

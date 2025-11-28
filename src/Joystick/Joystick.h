@@ -92,6 +92,7 @@ class Joystick : public QThread
 public:
     Joystick(const QString &name, int axisCount, int buttonCount, int hatCount, QObject *parent = nullptr);
     virtual ~Joystick();
+    void _handleAxis2(float,float,float,float,quint16,quint16);
 
     struct Calibration_t {
         int min = -32767;

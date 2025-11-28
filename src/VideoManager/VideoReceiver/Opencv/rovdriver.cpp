@@ -10,55 +10,149 @@
 #include "QmlObjectListModel.h"
 #include "SettingsManager.h"
 #include "Vehicle.h"
-
+#include "QGCApplication.h"
 #include <QtCore/QSettings>
 #include <QtCore/QThread>
+#include "LinkInterface.h"
+#include "MAVLinkProtocol.h"
+#include "QGCCorePlugin.h"
+#include "QGCMAVLink.h"
+#include "MAVLinkProtocol.h"     // <--- You must have this
+#include "MultiVehicleManager.h" // <--- You must have this
+#include "Vehicle.h"             // <--- You must have this
+LinkInterface*   link;
+ServoPLL pll;
+static int i;
+//QGC_LOGGING_CATEGORY(TrackingLog, "qgc.")
+// Helper function to get the global MAVLink Protocol instance
+// Use the standard QGC singleton access patterns:
+MAVLinkProtocol* mavlinkProtocol() {
+    return MAVLinkProtocol::instance();
+}
 
-/*QGC_LOGGING_CATEGORY(JoystickLog, "qgc.joystick.joystick")
-QGC_LOGGING_CATEGORY(JoystickValuesLog, "qgc.joystick.joystickvalues")*/
+MultiVehicleManager* multiVehicleManager() {
+    return MultiVehicleManager::instance();
+}
 ROVDriver::ROVDriver(QObject *parent)
-    : QThread(parent), running(true), connected(false), rc_channels(8, 1500)
+    : running(true), connected(false), rc_channels(8, 1500)
 {
-   udpSocket = new QUdpSocket(this);
-    //QHostAddress rovAddress("192.168.2.1"); // change to your ROV IP
-    //quint16 rovPort = 14550;                // default MAVLink UDP port
-   // Bind to any local port so we can send/receive datagrams
-   rovAddress = QHostAddress("192.168.2.2");
-   rovPort = 14550;
-   // ✅ Bind the UDP socket so it enters BoundState
-   if (!udpSocket->bind(QHostAddress::AnyIPv4, 14551)) {
-       qWarning() << "⚠️ Failed to bind UDP socket on port 14551.";
-       return;
-   }
-   if (udpSocket->state() == QUdpSocket::UnconnectedState) {
-       //qDebug()<<"unconnected";
-       udpSocket->connectToHost(rovAddress,rovPort);
-   }
+    // ... existing initialization code ...
 
+    // Initialize the test timer
+    m_testTimer = new QTimer(this);
+    m_testTimer->setInterval(1000); // 1 second per step
+    //m_testTimer->setSingleShot(true); // The timer only fires once per state
 
-    // Send a test packet to simulate connection
-    QByteArray ping = "HELLO_ROV";
-
-   if (udpSocket->state() == QUdpSocket::BoundState) {
-
-    qint64 sent = udpSocket->writeDatagram(ping, rovAddress, rovPort);
-
-    if (sent > 0) {
-        connected = true;
-        qDebug() << "✅ Sent test ping to ROV at" << rovAddress.toString() << ":" << rovPort;
-    } else {
-        qWarning() << "⚠️ Failed to send test ping to ROV.";
-    }
-   }
+    // Connect the timer to the state machine slot
+    //connect(m_testTimer, &QTimer::timeout, this, &ROVDriver::_runThrusterTestStep);
+    //m_testTimer->start();
 }
 
 ROVDriver::~ROVDriver()
 {
     stop();
-    wait(); // <--- Wait for thread to finish before destruction
+    //wait(); // <--- Wait for thread to finish before destruction
 }
 
-void ROVDriver::run() {
+void ROVDriver::startThrusterTest()
+{
+    // If the movement timer (used for tracking) is running, stop it first
+    // to prevent conflicts, or just ignore the request.
+    // Here we'll ensure we don't start two tests.
+    if (m_testState != 0) {
+        qDebug() << "Thruster test already active or not properly stopped.";
+        return;
+    }
+
+    m_testState = 1; // Start with the first step (Forward)
+    qDebug() << "Thruster Test Started: Step 1 (Forward)";
+    _runThrusterTestStep(); // Run the first step immediately
+}
+
+void ROVDriver::stopThrusterTest()
+{
+    if (m_testTimer->isActive()) {
+        m_testTimer->stop();
+    }
+    m_testState = 0; // Set to Idle
+
+    // CRITICAL: Send neutral command immediately to stop thrusters
+    sendRCOverride2(0.0f, 0.0f, 0.0f, 0.0f, 0, 0);
+    qDebug() << "Thruster Test Stopped (Manual or Completed)";
+}
+void ROVDriver::_runThrusterTestStep()
+{
+    // These floats correspond to the inputs for sendRCOverride2(roll, pitch, yaw, thrust, ...)
+    float roll = 0.0f;
+    float pitch = 0.0f;
+    float yaw = 0.0f;
+    float thrust = 0.0f; // Assuming 'thrust' controls forward/backward movement
+
+            // If the timer fires and the state is 5 (Done), stop the test.
+    if (m_testState >= 5) {
+        stopThrusterTest();
+        return;
+    }
+
+    // 1. Send the command for the current state (This is the STOP part of the previous command's cycle)
+    // The previous state's command was sent 1 second ago. We send the neutral command now.
+    sendRCOverride2(0.0f, 0.0f, 0.0f, 0.0f, 0, 0);
+
+    // 2. Prepare the command for the next state
+    switch (m_testState) {
+        case 1: // Forward
+            thrust = 1700.0f;
+            qDebug() << "Running: FORWARD (1.0)";
+            break;
+        case 2: // Backward
+            thrust = -1700.0f;
+            qDebug() << "Running: BACKWARD (-1.0)";
+            break;
+        case 3: // Left (We'll use Yaw for steering/turning)
+            yaw = -1700.0f;
+            qDebug() << "Running: LEFT (Yaw: -1.0)";
+            break;
+        case 4: // Right (We'll use Yaw for steering/turning)
+            yaw = 1700.0f;
+            qDebug() << "Running: RIGHT (Yaw: 1.0)";
+            break;
+        default:
+            // If m_testState is 5 (next step), we just stop and return.
+            stopThrusterTest();
+            return;
+    }
+
+            // 3. Send the command for the current state (Start the new 1-second pulse)
+    sendRCOverride2(roll, pitch, yaw, thrust, 0, 0);
+
+    // 4. Advance state and restart timer for the next step (1 second later)
+    m_testState++;
+    m_testTimer->start();
+}
+void ROVDriver::_sendTimedCommand()
+{
+    if (m_movementTimer->isActive()) {
+        // First timeout: Send the actual movement command
+        // Note: The timer is set to SingleShot. It will fire only once.
+        // We ensure we send the command before stopping.
+
+        // This is where you send the movement command for 1 second.
+        sendRCOverride2(0.0f, 0.0f, m_currentCommand.yaw, m_currentCommand.thrust, 0, 0);
+
+        // To stop the movement, we set the command back to neutral (0, 0)
+        // and send the stop command immediately after.
+        m_currentCommand.yaw = 0.0f;
+        m_currentCommand.thrust = 0.0f;
+
+        // Send the neutral command immediately.
+        sendRCOverride2(0.0f, 0.0f, m_currentCommand.yaw, m_currentCommand.thrust, 0, 0);
+
+        // Stop the timer. Since it's SingleShot, it technically stops itself,
+        // but explicitly stopping here is cleaner.
+        m_movementTimer->stop();
+    }
+}
+void ROVDriver::_run() {
     while (running) {
         if (!connected) {
             qDebug() << "Connecting to vehicle...";
@@ -73,18 +167,37 @@ void ROVDriver::run() {
             executeCommand(cmd);
         } else {
             mutex.unlock();
-            msleep(50);
+            QThread::msleep(50);
         }
     }
+}
+
+bool ROVDriver::sendMessageOnLinkThreadSafe(LinkInterface *link, mavlink_message_t message)
+{
+    // A. Get the active Vehicle instance
+    Vehicle* vehicle = MultiVehicleManager::instance()->activeVehicle();
+
+    if (!link || !vehicle) { // Check both link and vehicle
+        qCDebug(VehicleLog) << "sendLinkThreadSafe" << (link ? "link" : "link") << "not connected!";
+        return false;
+    }
+
+            // B. Fix the type mismatch: Pass the active 'vehicle' pointer, not 'this' (ROVDriver*)
+    vehicle->firmwarePlugin()->adjustOutgoingMavlinkMessageThreadSafe(vehicle, link, &message);
+
+            // ... (Rest of the message sending code)
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    int len = mavlink_msg_to_send_buffer(buffer, &message);
+    link->writeBytesThreadSafe((const char*)buffer, len);
+
+    return true;
 }
 
 void ROVDriver::stop() {
     QMutexLocker locker(&mutex);
     running = false;
     locker.unlock();
-
-    if (isRunning())
-        wait();  // Wait for the thread to fully stop
 
     if (connected) {
         rc_channels.fill(0);
@@ -118,32 +231,54 @@ void ROVDriver::disarm() {
 void ROVDriver::setMode(const QString &mode) {
     QMutexLocker locker(&mutex);
     commandQueue.enqueue({"mode", QVariantList() << mode});
+
 }
 
 void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCenter) {
-    double dx = frameCenter.x() - blobCenter.x();
-    double dy = frameCenter.y() - blobCenter.y();
-    double distance = std::sqrt(dx * dx + dy * dy);
-    double angle = qRadiansToDegrees(std::atan2(dy, dx));
+    QMutexLocker locker(&mutex);
 
+    double dx = blobCenter.x() - frameCenter.x();   // left/right
+    double dy = blobCenter.y() - frameCenter.y();   // up/down
+
+    double distance = std::sqrt(dx*dx + dy*dy);
+    double angle    = qRadiansToDegrees(std::atan2(dy, dx));
+    // --- YAW / Steering ---
     int steer = 1500;
-    if (angle > -90 && angle < 90)
-        steer = int(1500 + (distance * 1.1));
-    else
-        steer = int(1500 - (distance * 1.1));
 
-    int throttle = int(1500 + (distance * 1.5));
-    throttle = std::clamp(throttle, 1300, 1700);
+    if (angle > -90 && angle < 90) {
+        steer = int(1500 + (distance * 1.1));
+    } else {
+        steer = int(1500 - (distance * 1.1));
+    }
+
     steer = std::clamp(steer, 1000, 2000);
 
-    //qDebug()<<throttle<<steer;
-    sendRC(throttle, steer);
-    float yaw;
-    float pitch;
-    float roll;
+            // --- Throttle ---
+    int thr = int(1500 + (distance * 1.5));
+    thr = std::clamp(thr, 1300, 1700);
 
-    //_activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, 0, 0);
+            // Python sets throttle = 0 for test, optional:
+            // thr = 0;
 
+            // --- Assign outputs ---
+    int roll     = 1500;      // neutral
+    int pitch    = 1500;      // neutral
+    int yaw      = steer;
+    int throttle = thr;
+
+    // Map motions to joystick axes
+    /*int roll     = 1500 + qBound(-300, int(dx * 1.2), 300);       // sway ←→
+    int pitch    = 1500 + qBound(-300, int(distance * 0.8), 300);     // surge ↑↓
+    int yaw      = 1500 + qBound(-300, int(dx * 0.9), 300);       // rotate
+    int throttle = 1500 + qBound(-300, int(-dy * 1.3), 300);      // heave ↑↓
+
+    roll     = std::clamp(roll,     1100, 1900);
+    pitch    = std::clamp(pitch,    1100, 1900);
+    yaw      = std::clamp(yaw,      1100, 1900);
+    throttle = std::clamp(throttle, 1100, 1900);*/
+
+    //qDebug()<<roll<<pitch;
+    sendRCOverride2(roll,pitch,yaw,throttle,0,0);
 }
 
 void ROVDriver::executeCommand(const Command &cmd) {
@@ -181,51 +316,66 @@ void ROVDriver::setRCChannel(const QString &name, int value) {
 }
 
 void ROVDriver::sendRCOverride() {
-    //qDebug() << "RC Override:" << rc_channels;
-    if (!udpSocket) {
-        qWarning() << "UDP socket not initialized!";
-        return;
+    if (!link->isConnected()) {
+        qCDebug(VehicleLog) << "sendMessageOnLinkThreadSafe" << link << "not connected!";
     }
+
+            // Write message into buffer, prepending start sign
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
+    link->writeBytesThreadSafe((const char*)buf, len);
+}
 
-    uint16_t ch1 = rc_channels[0];
-    uint16_t ch2 = rc_channels[1];
-    uint16_t ch3 = rc_channels[2];
-    uint16_t ch4 = rc_channels[3];
-    uint16_t ch5 = rc_channels[4];
-    uint16_t ch6 = rc_channels[5];
-    uint16_t ch7 = rc_channels[6];
-    uint16_t ch8 = rc_channels[7];
+void ROVDriver::sendRCOverride2(float roll, float pitch , float yaw, float thrust, quint16 button1, quint16 button2)
+{
+    Vehicle* vehicle = MultiVehicleManager::instance()->activeVehicle();
+    if (!vehicle) {
+        qCDebug(VehicleLog) << "No active vehicle found to send MANUAL_CONTROL";
+        return;
+    }
+    // If you absolutely must get the LinkInterface pointer:
+    VehicleLinkManager* linkManager = vehicle->vehicleLinkManager();
+    SharedLinkInterfacePtr sharedLink = linkManager->primaryLink().lock();
+    if (!sharedLink) {
+        qCDebug(VehicleLog)<< "sendJoystickDataThreadSafe: primary link gone!";
+        return;
+    }
 
-    // Remaining channels (not used) must be 0 or 65535
-    uint16_t ch9  = 0;
-    uint16_t ch10 = 0;
-    uint16_t ch11 = 0;
-    uint16_t ch12 = 0;
-    uint16_t ch13 = 0;
-    uint16_t ch14 = 0;
-    uint16_t ch15 = 0;
-    uint16_t ch16 = 0;
-    uint16_t ch17 = 0;
-    uint16_t ch18 = 0;
+    if (sharedLink->linkConfiguration()->isHighLatency()) {
+        return;
+    }
 
-    mavlink_msg_rc_channels_override_pack(
-        1,      // system_id
-        200,    // component_id
-        &msg,
-        1,      // target_system
-        0,      // target_component
-        ch1, ch2, ch3, ch4,
-        ch5, ch6, ch7, ch8,
-        ch9, ch10, ch11, ch12,
-        ch13, ch14, ch15, ch16,
-        ch17, ch18
+    mavlink_message_t message;
+
+            // Incoming values are in the range -1:1
+    float axesScaling =         1.0 * 1000.0;
+    float newRollCommand =      roll * axesScaling;
+    float newPitchCommand  =    pitch * axesScaling;    // Joystick data is reverse of mavlink values
+    float newYawCommand    =    yaw * axesScaling;
+    float newThrustCommand =    thrust * axesScaling;
+
+    mavlink_msg_manual_control_pack_chan(
+        static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+        static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+        sharedLink->mavlinkChannel(),
+        &message,
+        static_cast<uint8_t>(vehicle->id()),
+        static_cast<int16_t>(newPitchCommand),
+        static_cast<int16_t>(newRollCommand),
+        static_cast<int16_t>(newThrustCommand),
+        static_cast<int16_t>(newYawCommand),
+        button1, button2,
+        0,
+        0, 0,
+        0, 0, 0, 0, 0, 0
         );
 
-    uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
-    udpSocket->writeDatagram(reinterpret_cast<const char*>(buf), len, rovAddress, rovPort);
-
+    if (sharedLink) {
+        //qDebug()<<thrust;
+    sendMessageOnLinkThreadSafe(sharedLink.get(),message);
+    }
 }
 
 void ROVDriver::setTarget(const QString &address, quint16 port)
@@ -233,4 +383,49 @@ void ROVDriver::setTarget(const QString &address, quint16 port)
     rovAddress = QHostAddress(address);
     rovPort = port;
     qDebug() << "ROV target set to" << rovAddress.toString() << ":" << rovPort;
+}
+
+void ServoPLL::setReference(const Rect &ref)
+{
+    referenceRect = ref;
+    initialized = true;
+}
+
+int ServoPLL::update(const Rect &detected, Size frameSize)
+{
+    if (!initialized) {
+        // Initialize reference in center of frame if not set
+        int w = frameSize.width / 4;
+        int h = frameSize.height / 3;
+        int x = (frameSize.width - w) / 2;
+        int y = (frameSize.height - h) / 2;
+        referenceRect = Rect(x, y, w, h);
+        initialized = true;
+    }
+
+            // Compute centers
+    float ref_center_x = referenceRect.x + referenceRect.width / 2.0f;
+    float det_center_x = detected.x + detected.width / 2.0f;
+
+            // Compute errors
+    float area_error = (referenceRect.area() - detected.area());
+    float pos_error = (ref_center_x - det_center_x);
+
+            // Deadbands
+    if (fabs(area_error) < deadband_area) area_error = 0;
+    if (fabs(pos_error) < deadband_pos) pos_error = 0;
+
+            // PLL-like feedback control
+    float control_signal = (Kp_area * area_error) + (Kp_pos * pos_error);
+    servo_signal = servo_center + static_cast<int>(control_signal);
+
+            // Clamp between servo limits
+    servo_signal = std::clamp(servo_signal, 1000, 2000);
+
+            // When locked (errors small), go back to neutral
+    if (area_error == 0 && pos_error == 0)
+        servo_signal = servo_center;
+
+            //qDebug()<<servo_signal;
+    return servo_signal;
 }

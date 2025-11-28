@@ -203,7 +203,13 @@ qt_add_executable(${CMAKE_PROJECT_NAME}
     MACOSX_BUNDLE
     ${QGC_RESOURCES}
 )
-
+# ----------------- FIX FOR MISSING HEADERS -----------------
+# Add the main 'src' directory to the include path for the executable target.
+# This allows deep-nested files like rovdriver.cpp to find core headers like QGCToolbox.h.
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+    "${CMAKE_SOURCE_DIR}/src"
+)
+# -----------------------------------------------------------
 if(WIN32)
     include(Windows)
 elseif(APPLE)

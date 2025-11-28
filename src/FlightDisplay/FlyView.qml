@@ -278,9 +278,15 @@ Item {
             onClicked:
             {
                 if(!track_button._clicked)
+                {
+                    QGroundControl.multiVehicleManager.obj_det = true
                     QGroundControl.videoManager.track = true
+                }
                 else
+                {
+                    QGroundControl.multiVehicleManager.obj_det = false
                     QGroundControl.videoManager.track = false
+                }
 
                 track_button._clicked =!track_button._clicked
 
@@ -291,7 +297,7 @@ Item {
     // Loader to show Winch page
     Loader {
         id: winchLoader
-        width:parent.width/2.5
+        width:parent.width/3
         height:parent.height/2
         anchors.left: track_button.right
         anchors.leftMargin: _toolsMargin

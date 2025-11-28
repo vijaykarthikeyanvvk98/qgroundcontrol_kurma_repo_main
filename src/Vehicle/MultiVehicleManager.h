@@ -38,6 +38,7 @@ class MultiVehicleManager : public QObject
     Q_PROPERTY(QmlObjectListModel   *vehicles                       READ vehicles                                                           CONSTANT)
     Q_PROPERTY(QmlObjectListModel   *selectedVehicles               READ selectedVehicles                                                   CONSTANT)
     Q_PROPERTY(Vehicle              *offlineEditingVehicle          READ offlineEditingVehicle                                              CONSTANT)
+    Q_PROPERTY(bool                 obj_det                         READ obj_det                            WRITE setobj_det                NOTIFY obj_detChanged)
 
 public:
     explicit MultiVehicleManager(QObject *parent = nullptr);
@@ -56,6 +57,9 @@ public:
     Vehicle *offlineEditingVehicle() const { return _offlineEditingVehicle; }
     Vehicle *activeVehicle() const { return _activeVehicle; }
     void setActiveVehicle(Vehicle *vehicle);
+    void setobj_det(bool);
+    bool is_det_track=false;
+    bool obj_det(){return is_det_track;}
 
 signals:
     void vehicleAdded(Vehicle *vehicle);
@@ -63,6 +67,8 @@ signals:
     void activeVehicleAvailableChanged(bool activeVehicleAvailable);
     void parameterReadyVehicleAvailableChanged(bool parameterReadyVehicleAvailable);
     void activeVehicleChanged(Vehicle *activeVehicle);
+    void obj_detChanged(bool);
+    void obj_track(bool);
 
 private slots:
     void _deleteVehiclePhase1(Vehicle *vehicle); /// This slot is connected to the Vehicle::allLinksDestroyed signal such that the Vehicle is deleted and all other right things happen when the Vehicle goes away.

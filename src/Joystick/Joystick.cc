@@ -659,6 +659,7 @@ void Joystick::_handleAxis()
     }
 
     qCDebug(JoystickValuesLog) << "name:roll:pitch:yaw:throttle:gimbalPitch:gimbalYaw" << name() << roll << -pitch << yaw << throttle << gimbalPitch << gimbalYaw;
+    //qDebug() << "name:roll:pitch:yaw:throttle:gimbalPitch:gimbalYaw" << name() << roll << -pitch << yaw << throttle << gimbalPitch << gimbalYaw;
 
     // NOTE: The buttonPressedBits going to MANUAL_CONTROL are currently used by ArduSub (and it only handles 16 bits)
     // Set up button bitmap
@@ -675,6 +676,12 @@ void Joystick::_handleAxis()
     const uint16_t lowButtons = static_cast<uint16_t>(buttonPressedBits & 0xFFFF);
     const uint16_t highButtons = static_cast<uint16_t>((buttonPressedBits >> 16) & 0xFFFF);
     _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, lowButtons, highButtons);
+}
+
+void Joystick::_handleAxis2(float roll, float pitch, float yaw, float throttle, quint16 buttons, quint16 buttons2)
+{
+    _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, buttons, buttons2);
+
 }
 
 void Joystick::startPolling(Vehicle* vehicle)

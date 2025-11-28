@@ -45,8 +45,8 @@ Rectangle
         contentItem: Text {
             id: response_button2
             text: "Exit"
-            font.pixelSize: Math.min(winchdisplay.width / 60,
-                                     winchdisplay.height / 50)
+            font.pixelSize: Math.min(winchdisplay.width / 40,
+                                     winchdisplay.height / 30)
             font.bold: true
             //font.pixelSize: font_size
             style: Text.Sunken
@@ -79,9 +79,10 @@ Rectangle
     {
         id:column
 
-        width: 0.5*parent.width
-        height:0.5*parent.height
+        width:0.9*parent.width
+        height:0.75*parent.height
         spacing: 0.025 * parent.height
+        clip: true
         anchors
         {
             left:parent.left
@@ -93,18 +94,18 @@ Rectangle
         {
             id:row1
             Layout.fillHeight: true
-            spacing: 0.25 * parent.width
+            spacing: 0.005 * parent.width
 
             Text {
-                Layout.fillWidth: true
-                text: "Motor"
+                //Layout.fillWidth: true
+                text: "Motor                          "
                 font.family: "Segoe UI Emoji"
                 font.bold: true
                 //horizontalAlignment: Text.AlignHCenter
                 //style: Text.Outline
                 color: "white"
-                font.pixelSize: Math.min(winchdisplay.width / 60,
-                                         winchdisplay.height / 50)
+                font.pixelSize: Math.min(winchdisplay.width / 30,
+                                         winchdisplay.height / 20)
             }
 
 
@@ -115,8 +116,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button5
                     text: "Forward"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -148,8 +149,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button4
                     text: "Stop"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -181,8 +182,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button3
                     text: "Backward"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -215,16 +216,18 @@ Rectangle
             id:row2
             Layout.fillHeight: true
 
-            spacing: 0.25 * parent.width
+            spacing:row1.spacing// 0.25 * parent.width
 
             Text {
-                Layout.fillWidth: true
-                text: "Actuator"
+                //Layout.fillWidth: true
+                text: "Actuator                      "
                 font.family: "Segoe UI Emoji"
                 font.bold: true
                 color: "white"
-                font.pixelSize: Math.min(winchdisplay.width / 60,
-                                         winchdisplay.height / 50)
+                /*font.pixelSize: Math.min(winchdisplay.width / 60,
+                                         winchdisplay.height / 50)*/
+                font.pixelSize: Math.min(winchdisplay.width / 30,
+                                         winchdisplay.height / 20)
             }
 
 
@@ -235,8 +238,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button7
                     text: "Forward"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -267,8 +270,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button6
                     text: "Stop"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -299,8 +302,8 @@ Rectangle
                 contentItem: Text {
                     id: response_button8
                     text: "Backward"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                     font.bold: true
                     //font.pixelSize: font_size
                     style: Text.Sunken
@@ -333,7 +336,7 @@ Rectangle
             id:row3
             Layout.fillHeight: true
 
-            spacing: 0.25 * parent.width
+            spacing:row1.spacing //0.25 * parent.width
 
             ColumnLayout
             {
@@ -347,8 +350,8 @@ Rectangle
                     font.family: "Segoe UI Emoji"
                     font.bold: true
                     color: "white"
-                    font.pixelSize: Math.min(winchdisplay.width / 60,
-                                             winchdisplay.height / 50)
+                    font.pixelSize: Math.min(winchdisplay.width / 30,
+                                             winchdisplay.height / 20)
                 }
                 Text {
                     Layout.fillHeight: true
@@ -359,8 +362,8 @@ Rectangle
                     horizontalAlignment: Text.AlignHCenter
                     style: Text.Outline
                     color: "white"
-                    font.pixelSize: Math.min(winchdisplay.width / 20,
-                                             winchdisplay.height / 10)
+                    font.pixelSize: Math.min(winchdisplay.width / 10,
+                                             winchdisplay.height / 5)
                 }
             }
 
