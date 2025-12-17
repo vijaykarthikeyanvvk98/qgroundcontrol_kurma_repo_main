@@ -9,47 +9,42 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtWidgets/QApplication>
-
 #include "QGCApplication.h"
 #include "QGCCommandLineParser.h"
 #include "QGCLogging.h"
 #include "Platform.h"
-#include "NTRIP.h"
-
+#include <VideoManager/VideoReceiver/Opencv/videostreamer.h>
+#include <VideoManager/VideoReceiver/Opencv/opencvimageprovider.h>
+#include <opencv2/core/utils/logger.defines.hpp>
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
-    #include <QtWidgets/QMessageBox>
-    #include "RunGuard.h"
+#include <QtWidgets/QMessageBox>
+#include <cstdlib> // <-- 1. ADD THIS INCLUDE
+#include "RunGuard.h"
 #endif
 
 #ifdef Q_OS_LINUX
-    #include <unistd.h>
-    #include <sys/types.h>
+#include <unistd.h>
+#include <sys/types.h>
 #endif
 
 #ifdef QGC_UNITTEST_BUILD
-    #include "UnitTestList.h"
+#include "UnitTestList.h"
 #endif
 
 int main(int argc, char *argv[])
 {
-#if 0
-    // Useful for debugging specific unit tests
-    char argument1[] = "--unittest:ParameterManagerTest";
-    char argument2[] = "--logging:FactSystem.ParameterManager,Utilities.QGCStateMachine";
-    char *newArgv[] = { argv[0], argument1, argument2 };
-    argc = 3;
-    argv = newArgv;
-#endif
 
+    qRegisterMetaType<cv::Mat>("cv::Mat");
+    qDebug() << cv::getBuildInformation().c_str();
 #if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
     if (::getuid() == 0) {
         const QApplication errorApp(argc, argv);
         // QErrorMessage
         (void) QMessageBox::critical(nullptr,
-                                     QCoreApplication::translate("main", "Error"),
-                                     QCoreApplication::translate("main", "You are running %1 as root. "
-                                                                         "You should not do this since it will cause other issues with %1. "
-                                                                         "%1 will now exit.<br/><br/>").arg(QGC_APP_NAME));
+                                    QCoreApplication::translate("main", "Error"),
+                                    QCoreApplication::translate("main", "You are running %1 as root. "
+                                                                "You should not do this since it will cause other issues with %1. "
+                                                                "%1 will now exit.<br/><br/>").arg(QGC_APP_NAME));
         return -1;
     }
 #endif
@@ -75,22 +70,23 @@ int main(int argc, char *argv[])
         if (!guard.tryToRun()) {
             const QApplication errorApp(argc, argv);
             (void) QMessageBox::critical(nullptr,
-                QCoreApplication::translate("main", "Error"),
-                QCoreApplication::translate("main", "A second instance of %1 is already running. "
-                                                    "Please close the other instance and try again.").arg(QStringLiteral(QGC_APP_NAME)));
+                                        QCoreApplication::translate("main", "Error"),
+                                        QCoreApplication::translate("main", "A second instance of %1 is already running. "
+                                                                    "Please close the other instance and try again.").arg(QStringLiteral(QGC_APP_NAME)));
             return -1;
         }
     }
 #endif
 
-    // Early platform setup before Qt app construction
+            // Early platform setup before Qt app construction
     Platform::setupPreApp(args);
 
     QGCApplication app(argc, argv, args);
+    app.setWindowIcon(QIcon(":/res/vikra_2.png"));
 
     QGCLogging::installHandler();
 
-    // Late platform setup after app and logging exist
+            // Late platform setup after app and logging exist
     Platform::setupPostApp();
 
     app.init();

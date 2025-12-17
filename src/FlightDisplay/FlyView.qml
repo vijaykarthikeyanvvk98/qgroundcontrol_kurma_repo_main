@@ -59,7 +59,6 @@ Item {
     property rect   _centerViewport:        Qt.rect(0, 0, width, height)
     property real   _rightPanelWidth:       ScreenTools.defaultFontPixelWidth * 30
     property var    _mapControl:            mapControl
-    property real   _widgetMargin:          ScreenTools.defaultFontPixelWidth * 0.75
 
     property real   _fullItemZorder:    0
     property real   _pipItemZorder:     QGroundControl.zOrderWidgets
@@ -75,16 +74,21 @@ Item {
 
     QGCToolInsets {
         id:                     _toolInsets
-        topEdgeLeftInset:       toolbar.height
-        topEdgeCenterInset:     topEdgeLeftInset
-        topEdgeRightInset:      topEdgeLeftInset
         leftEdgeBottomInset:    _pipView.leftEdgeBottomInset
         bottomEdgeLeftInset:    _pipView.bottomEdgeLeftInset
     }
 
+    FlyViewToolBar {
+        id:         toolbar
+        visible:    !QGroundControl.videoManager.fullScreen
+    }
+
     Item {
         id:                 mapHolder
-        anchors.fill:       parent
+        anchors.top:        toolbar.bottom
+        anchors.bottom:     parent.bottom
+        anchors.left:       parent.left
+        anchors.right:      parent.right
 
         FlyViewMap {
             id:                     mapControl
@@ -105,7 +109,7 @@ Item {
         PipView {
             id:                     _pipView
             anchors.left:           parent.left
-            anchors.bottom:         parent.bottom
+            anchors.bottom: parent.bottom
             anchors.margins:        _toolsMargin
             item1IsFullSettingsKey: "MainFlyWindowIsMap"
             item1:                  mapControl
@@ -124,8 +128,6 @@ Item {
             anchors.bottom:         parent.bottom
             anchors.left:           parent.left
             anchors.right:          guidedValueSlider.visible ? guidedValueSlider.left : parent.right
-            anchors.margins:        _widgetMargin
-            anchors.topMargin:      toolbar.height + _widgetMargin
             z:                      _fullItemZorder + 2 // we need to add one extra layer for map 3d viewer (normally was 1)
             parentToolInsets:       _toolInsets
             mapControl:             _mapControl
@@ -188,8 +190,138 @@ Item {
         }
     }
 
-    FlyViewToolBar {
-        id:         toolbar
-        visible:    !QGroundControl.videoManager.fullScreen
+    /*TelemetryValuesBar {
+            anchors.bottom:       parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottomMargin: 0.025*mainwindow.width
+            //extraWidth:             innerControl.extraValuesWidth
+            settingsGroup:          factValueGrid.telemetryBarSettingsGroup
+            specificVehicleForCard: null // Tracks active vehicle
+        }*/
+
+    FlyViewInstrumentPanel {
+            id:                 instrumentPanel
+            anchors.bottom:   parent.bottom
+            anchors.right: parent.right
+            anchors.bottomMargin: 0.1*mainWindow.width
+            anchors.rightMargin:  0.01*mainWindow.width
+            visible:    winchLoader.active?false:        QGroundControl.corePlugin.options.flyView.showInstrumentPanel// && _showSingleVehicleUI
+        }
+
+    QGCButton
+    {
+        id:winch_button
+        anchors.left: parent.left
+        anchors.leftMargin:_toolsMargin
+        anchors.verticalCenter: parent.verticalCenter
+        contentItem: Text {
+            id: response_button2
+            text: "  Winch  "
+            font.pixelSize: Math.min(parent.width / 90, parent.height / 70)
+            font.bold: true
+            //font.pixelSize: font_size
+            style: Text.Sunken
+            color: "White"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle
+        {
+            color:"#4287f5"
+            radius:0.005*parent.width
+            border.color:"#000000"
+            border.width:0.05*parent.width
+        }
+
+        MouseArea
+        {
+            anchors.fill: parent
+
+            onClicked:
+            {
+                winchLoader.source ="WinchSettings.qml"
+                winchLoader.active = true
+            }
+        }
+    }
+
+    QGCButton
+    {
+        id:track_button
+        anchors.left: parent.left
+        anchors.leftMargin:_toolsMargin
+        anchors.top: winch_button.bottom
+        anchors.topMargin: _toolsMargin
+        property bool _clicked: false
+        contentItem: Text {
+            id: response_button3
+            text:track_button._clicked?"Stop\nTracking":"Start\nTracking"
+            font.pixelSize: response_button2.font.pixelSize
+            font.bold: true
+            style: Text.Sunken
+            color: "White"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle
+        {
+            color:"#4287f5"
+            radius:0.005*parent.width
+            border.color:"#000000"
+            border.width:0.05*parent.width
+        }
+
+        MouseArea
+        {
+            anchors.fill: parent
+
+            onClicked:
+            {
+                if(!track_button._clicked)
+                {
+                    QGroundControl.multiVehicleManager.obj_det = true
+                    QGroundControl.videoManager.track = true
+                }
+                else
+                {
+                    QGroundControl.multiVehicleManager.obj_det = false
+                    QGroundControl.videoManager.track = false
+                }
+
+                track_button._clicked =!track_button._clicked
+
+            }
+        }
+    }
+
+    // Loader to show Winch page
+    Loader {
+        id: winchLoader
+        width:parent.width/3
+        height:parent.height/2
+        anchors.left: track_button.right
+        anchors.leftMargin: _toolsMargin
+        anchors.verticalCenter: parent.verticalCenter
+        visible: active
+        active: false
+        //z: QGroundControl.zOrderTopMost
+        source: active ? "WinchSettings.qml" : ""
+
+        onLoaded: {
+            if (item) {
+                //item.parent = winchLoader
+                //item.closeRequested.connect(() => winchLoader.active = false)
+            }
+        }
+    }
+
+
+    Connections {
+        target: winchLoader.item
+
+        function onClosed() {
+                winchLoader.source =""
+                winchLoader.active = false
+        }
     }
 }

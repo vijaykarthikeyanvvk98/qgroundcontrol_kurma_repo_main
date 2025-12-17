@@ -108,7 +108,7 @@ SettingsPage {
 
         LabelledFactComboBox {
             Layout.fillWidth:   true
-            label:              fact.shortDescription
+            label:              qsTr("Video decode priority")
             fact:               _videoSettings.forceVideoDecoder
             visible:            fact.visible
             indexModel:         false

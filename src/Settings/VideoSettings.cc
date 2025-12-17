@@ -32,18 +32,16 @@ DECLARE_SETTINGGROUP(Video, "Video")
     videoSourceList.append(videoSource3DRSolo);
     videoSourceList.append(videoSourceParrotDiscovery);
     videoSourceList.append(videoSourceYuneecMantisG);
+    videoSourceList.append(videoSourceOpenCV);
 
-    #ifdef QGC_HERELINK_AIRUNIT_VIDEO
-        videoSourceList.append(videoSourceHerelinkAirUnit);
-    #else
-        videoSourceList.append(videoSourceHerelinkHotspot);
-    #endif
+#ifdef QGC_HERELINK_AIRUNIT_VIDEO
+    videoSourceList.append(videoSourceHerelinkAirUnit);
+#else
+    videoSourceList.append(videoSourceHerelinkHotspot);
+#endif
 #endif
 #ifndef QGC_DISABLE_UVC
-    QStringList uvcDevices = UVCReceiver::getDeviceNameList();
-    for (const QString& device : uvcDevices) {
-        videoSourceList.append(device);
-    }
+    videoSourceList.append(UVCReceiver::getDeviceNameList());
 #endif
     if (videoSourceList.count() == 0) {
         _noVideo = true;
@@ -53,7 +51,7 @@ DECLARE_SETTINGGROUP(Video, "Video")
         videoSourceList.insert(0, videoDisabled);
     }
 
-    // make translated strings
+            // make translated strings
     QStringList videoSourceCookedList;
     for (const QVariant& videoSource: videoSourceList) {
         videoSourceCookedList.append( VideoSettings::tr(videoSource.toString().toStdString().c_str()) );
@@ -63,7 +61,7 @@ DECLARE_SETTINGGROUP(Video, "Video")
 
     _setForceVideoDecodeList();
 
-    // Set default value for videoSource
+            // Set default value for videoSource
     _setDefaults();
 }
 
@@ -114,7 +112,7 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, forceVideoDecoder)
 #else
             false
 #endif
-        );
+            );
 
         connect(_forceVideoDecoderFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
     }
@@ -132,7 +130,7 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, lowLatencyMode)
 #else
             false
 #endif
-        );
+            );
 
         connect(_lowLatencyModeFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
     }
@@ -150,7 +148,7 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, rtspTimeout)
 #else
             false
 #endif
-        );
+            );
 
         connect(_rtspTimeoutFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
     }
@@ -184,6 +182,15 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, tcpUrl)
     return _tcpUrlFact;
 }
 
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, opencv)
+{
+    if (!_opencvFact) {
+        _opencvFact = _createSettingsFact(opencvName);
+        connect(_opencvFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _opencvFact;
+}
+
 bool VideoSettings::streamConfigured(void)
 {
     //-- First, check if it's autoconfigured
@@ -204,7 +211,15 @@ bool VideoSettings::streamConfigured(void)
     //-- If RTSP, check for URL
     if(vSource == videoSourceRTSP) {
         qCDebug(VideoManagerLog) << "Testing configuration for RTSP Stream:" << rtspUrl()->rawValue().toString();
+        //qDebug() << "Testing configuration for OpenCV RTSP Stream:" << opencv()->rawValue().toString();
         return !rtspUrl()->rawValue().toString().isEmpty();
+    }
+    //-- If Opencv, check for URL
+    if(vSource == videoSourceOpenCV) {
+        qCDebug(VideoManagerLog) << "Testing configuration for OpenCV RTSP Stream:" << opencv()->rawValue().toString();
+        //qDebug() << "Testing configuration for OpenCV RTSP Stream:" << opencv()->rawValue().toString();
+        //return !opencv()->rawValue().toString().isEmpty();
+        return true;
     }
     //-- If TCP, check for URL
     if(vSource == videoSourceTCP) {
@@ -245,25 +260,25 @@ void VideoSettings::_setForceVideoDecodeList()
 #ifdef QGC_GST_STREAMING
     static const QList<GStreamer::VideoDecoderOptions> removeForceVideoDecodeList{
 #if defined(Q_OS_ANDROID)
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVAAPI,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderNVIDIA,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderIntel,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVAAPI,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderNVIDIA,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderIntel,
 #elif defined(Q_OS_LINUX)
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
 #elif defined(Q_OS_WIN)
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVulkan,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVulkan,
 #elif defined(Q_OS_MACOS)
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVAAPI,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVAAPI,
 #elif defined(Q_OS_IOS)
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderVAAPI,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderNVIDIA,
-    GStreamer::VideoDecoderOptions::ForceVideoDecoderIntel,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderDirectX3D,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderVAAPI,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderNVIDIA,
+        GStreamer::VideoDecoderOptions::ForceVideoDecoderIntel,
 #endif
     };
 

@@ -30,7 +30,6 @@ class VideoManager : public QObject
     QML_ELEMENT
     QML_UNCREATABLE("")
     Q_MOC_INCLUDE("Vehicle.h")
-
     Q_PROPERTY(bool     gstreamerEnabled        READ gstreamerEnabled                           CONSTANT)
     Q_PROPERTY(bool     qtmultimediaEnabled     READ qtmultimediaEnabled                        CONSTANT)
     Q_PROPERTY(bool     uvcEnabled              READ uvcEnabled                                 CONSTANT)
@@ -50,12 +49,13 @@ class VideoManager : public QObject
     Q_PROPERTY(QSize    videoSize               READ videoSize                                  NOTIFY videoSizeChanged)
     Q_PROPERTY(QString  imageFile               READ imageFile                                  NOTIFY imageFileChanged)
     Q_PROPERTY(QString  uvcVideoSourceID        READ uvcVideoSourceID                           NOTIFY uvcVideoSourceIDChanged)
+    Q_PROPERTY(QRectF   rectangle_box           READ rectangle_box                              NOTIFY rectangle_boxChanged)
+    Q_PROPERTY(bool     detect                  READ detect                                     NOTIFY detectChanged)
+    Q_PROPERTY(bool     track                   READ track                  WRITE set_track         NOTIFY trackChanged)
 
-public:
+   public:
     explicit VideoManager(QObject *parent = nullptr);
     ~VideoManager();
-
-    friend class FinishVideoInitialization;
 
     static VideoManager *instance();
 
@@ -65,7 +65,7 @@ public:
     Q_INVOKABLE void stopRecording();
     Q_INVOKABLE void stopVideo();
 
-    void init(QQuickWindow *mainWindow);
+    void init(QQuickWindow *rootWindow);
     void cleanup();
     bool autoStreamConfigured() const;
     bool decoding() const { return _decoding; }
@@ -87,8 +87,11 @@ public:
     static bool gstreamerEnabled();
     static bool qtmultimediaEnabled();
     static bool uvcEnabled();
-
-signals:
+    QRectF rectangle_box() { return _rectangle;}
+    bool detect() {return is_detect;}
+    bool track() {return is_track;}
+    void set_track(bool);
+   signals:
     void aspectRatioChanged();
     void autoStreamConfiguredChanged();
     void decodingChanged();
@@ -103,14 +106,16 @@ signals:
     void streamingChanged();
     void uvcVideoSourceIDChanged();
     void videoSizeChanged();
+    void rectangle_boxChanged();
+    void detectChanged();
+    void trackChanged(bool);
 
-private slots:
+   private slots:
     void _communicationLostChanged(bool communicationLost);
     void _setActiveVehicle(Vehicle *vehicle);
     void _videoSourceChanged();
 
-private:
-    void _initAfterQmlIsReady();
+   private:
     void _initVideoReceiver(VideoReceiver *receiver, QQuickWindow *window);
     bool _updateAutoStream(VideoReceiver *receiver);
     bool _updateUVC(VideoReceiver *receiver);
@@ -128,7 +133,6 @@ private:
     VideoSettings *_videoSettings = nullptr;
 
     bool _initialized = false;
-    bool _initAfterQmlIsReadyDone = false;
     bool _fullScreen = false;
     QAtomicInteger<bool> _decoding = false;
     QAtomicInteger<bool> _recording = false;
@@ -137,14 +141,17 @@ private:
     QString _imageFile;
     QString _uvcVideoSourceID;
     Vehicle *_activeVehicle = nullptr;
-    QQuickWindow *_mainWindow = nullptr;
+    QRectF _rectangle={0,0,0.0,0.0};
+    bool is_detect=false;
+    bool is_track=false;
+
 };
 
 /*===========================================================================*/
 
 class FinishVideoInitialization : public QRunnable
 {
-public:
+   public:
     FinishVideoInitialization();
     ~FinishVideoInitialization();
 

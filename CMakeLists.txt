@@ -92,11 +92,33 @@ project(${QGC_APP_NAME}
     LANGUAGES C CXX
 )
 
+#######################################################
+#                OpenCV Integration
+#######################################################
+
+# Only try to load OpenCV if building for Android or Desktop
+if(ANDROID)
+    add_definitions(-DPARALLEL_ENABLE_PLUGINS=OFF)
+
+    message(STATUS "Configuring OpenCV for Android build")
+
+    # You MUST point this to:
+    # OpenCV-android-sdk/sdk/native/jni
+    # or your custom Android OpenCV build
+    set(OpenCV_DIR "C:/Users/vijay/Downloads/OpenCV-android-sdk/sdk/native/jni")
+
+    find_package(OpenCV REQUIRED)
+    message(STATUS "OpenCV version: ${OpenCV_VERSION}")
+    message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
+
+    include_directories(${OpenCV_INCLUDE_DIRS})
+endif()
+
 # ============================================================================
 # CMake & Build System Configuration
 # ============================================================================
 
-# Standard CMake modules
+# Standard CMakce modules
 include(GNUInstallDirs)
 include(FetchContent)
 include(CMakePrintHelpers)
@@ -190,7 +212,10 @@ find_package(Qt6
 
 if(LINUX)
     find_package(Qt6 COMPONENTS WaylandClient)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 endif()
+
+
 
 qt_standard_project_setup(
     REQUIRES ${QGC_QT_MINIMUM_VERSION}
@@ -249,6 +274,27 @@ qt_add_executable(${CMAKE_PROJECT_NAME}
     ${QGC_RESOURCES}
 )
 
+if(ANDROID)
+    target_link_libraries(${CMAKE_PROJECT_NAME}
+        PRIVATE
+        ${OpenCV_LIBS}
+    )
+
+# 2. Package the .so into the APK
+# Ensure ANDROID_ABI is available to select the correct .so (e.g., arm64-v8a)
+set(OPENCV_LIB_PATH "${OpenCV_DIR}/../libs/${ANDROID_ABI}/libopencv_java4.so")
+
+# In Qt6, the property is QT_ANDROID_EXTRA_LIBS
+set_target_properties(${QGC_APP_NAME} PROPERTIES
+    QT_ANDROID_EXTRA_LIBS "${OPENCV_LIB_PATH}"
+)
+
+message(STATUS "OpenCV Android packaging configured for: ${ANDROID_ABI}")
+
+endif()
+
+
+target_link_libraries(QGroundControl PRIVATE Qt6::Core)
 # ----------------------------------------------------------------------------
 # Platform-Specific Configuration
 # ----------------------------------------------------------------------------
@@ -274,6 +320,12 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
         QtQuick.Controls
         QtQuick.Dialogs
         QtQuick.Layouts
+        SOURCES src/VideoManager/VideoReceiver/Opencv/videostreamer.cc src/VideoManager/VideoReceiver/Opencv/videostreamer.h
+        SOURCES src/VideoManager/VideoReceiver/Opencv/opencvimageprovider.h src/VideoManager/VideoReceiver/Opencv/rovdriver.h
+        SOURCES src/VideoManager/VideoReceiver/Opencv/opencvimageprovider.cc src/VideoManager/VideoReceiver/Opencv/rovdriver.cpp
+        SOURCES src/WinchSettings.h
+        SOURCES src/WinchSettings.cpp
+
 )
 
 # ----------------------------------------------------------------------------

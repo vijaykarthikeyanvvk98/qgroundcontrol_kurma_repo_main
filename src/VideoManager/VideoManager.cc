@@ -27,15 +27,15 @@
 #endif
 #include "QtMultimediaReceiver.h"
 #include "UVCReceiver.h"
-
+#include "Opencv/videostreamer.h"
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QDir>
 #include <QtQml/QQmlEngine>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickWindow>
 #include <QtCore/QTimer>
-
-QGC_LOGGING_CATEGORY(VideoManagerLog, "Video.VideoManager")
+#include "Opencv/videostreamer.h"
+QGC_LOGGING_CATEGORY(VideoManagerLog, "qgc.videomanager.videomanager")
 
 static constexpr const char *kFileExtension[VideoReceiver::FILE_FORMAT_MAX + 1] = {
     "mkv",
@@ -47,8 +47,8 @@ Q_APPLICATION_STATIC(VideoManager, _videoManagerInstance);
 
 VideoManager::VideoManager(QObject *parent)
     : QObject(parent)
-    , _subtitleWriter(new SubtitleWriter(this))
-    , _videoSettings(SettingsManager::instance()->videoSettings())
+      , _subtitleWriter(new SubtitleWriter(this))
+      , _videoSettings(SettingsManager::instance()->videoSettings())
 {
     qCDebug(VideoManagerLog) << this;
 
@@ -73,48 +73,28 @@ VideoManager *VideoManager::instance()
     return _videoManagerInstance();
 }
 
-void VideoManager::init(QQuickWindow *mainWindow)
+void VideoManager::init(QQuickWindow *window)
 {
     if (_initialized) {
-        qCDebug(VideoManagerLog) << "Video Manager already initialized";
         return;
     }
 
-    if (!mainWindow) {
-        qCCritical(VideoManagerLog) << "Failed To Init Video Manager - mainWindow is NULL";
+    if (!window) {
+        qCCritical(VideoManagerLog) << "Failed To Init Video Manager - window is NULL";
         return;
     }
-    _mainWindow = mainWindow;
 
-    // TODO: VideoSettings _configChanged/streamConfiguredChanged
+            // TODO: VideoSettings _configChanged/streamConfiguredChanged
     (void) connect(_videoSettings->videoSource(), &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
     (void) connect(_videoSettings->udpUrl(), &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
     (void) connect(_videoSettings->rtspUrl(), &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
     (void) connect(_videoSettings->tcpUrl(), &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
+    (void) connect(_videoSettings->opencv(), &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
     (void) connect(_videoSettings->aspectRatio(), &Fact::rawValueChanged, this, &VideoManager::aspectRatioChanged);
     (void) connect(_videoSettings->lowLatencyMode(), &Fact::rawValueChanged, this, [this](const QVariant &value) { Q_UNUSED(value); _restartAllVideos(); });
     (void) connect(MultiVehicleManager::instance(), &MultiVehicleManager::activeVehicleChanged, this, &VideoManager::_setActiveVehicle);
 
     (void) connect(this, &VideoManager::autoStreamConfiguredChanged, this, &VideoManager::_videoSourceChanged);
-
-    _mainWindow->scheduleRenderJob(new FinishVideoInitialization(), QQuickWindow::BeforeSynchronizingStage);
-
-    _initialized = true;
-}
-
-void VideoManager::_initAfterQmlIsReady()
-{
-    if (_initAfterQmlIsReadyDone) {
-        qCWarning(VideoManagerLog) << "_initAfterQmlIsReady called multiple times";
-        return;
-    }
-    if (!_mainWindow) {
-        qCCritical(VideoManagerLog) << "_initAfterQmlIsReady called with NULL mainWindow";
-        return;
-    }
-    _initAfterQmlIsReadyDone = true;
-
-    qCDebug(VideoManagerLog) << "_initAfterQmlIsReady";
 
     static const QStringList videoStreamList = {
         "videoContent",
@@ -127,8 +107,16 @@ void VideoManager::_initAfterQmlIsReady()
         }
         receiver->setName(streamName);
 
-        _initVideoReceiver(receiver, _mainWindow);
+        _initVideoReceiver(receiver, window);
     }
+
+    VideoStreamer* opencvReceiver = new VideoStreamer(this);
+    opencvReceiver->setName(VideoSettings::videoSourceOpenCV);
+    _initVideoReceiver(opencvReceiver, window);
+
+    window->scheduleRenderJob(new FinishVideoInitialization(), QQuickWindow::BeforeSynchronizingStage);
+
+    _initialized = true;
 }
 
 void VideoManager::cleanup()
@@ -240,7 +228,7 @@ double VideoManager::aspectRatio() const
         }
     }
 
-    // FIXME: use _videoReceiver->videoSize() to calculate AR (if AR is not specified in the settings?)
+            // FIXME: use _videoReceiver->videoSize() to calculate AR (if AR is not specified in the settings?)
     return _videoSettings->aspectRatio()->rawValue().toDouble();
 }
 
@@ -316,6 +304,15 @@ bool VideoManager::uvcEnabled()
     return UVCReceiver::enabled();
 }
 
+void VideoManager::set_track(bool value)
+{
+    is_track = value;
+    //qDebug()<<value<<is_track;
+    emit trackChanged(is_track);
+}
+
+
+
 bool VideoManager::qtmultimediaEnabled()
 {
     return QtMultimediaReceiver::enabled();
@@ -348,6 +345,7 @@ bool VideoManager::isStreamSource() const
         VideoSettings::videoSourceYuneecMantisG,
         VideoSettings::videoSourceHerelinkAirUnit,
         VideoSettings::videoSourceHerelinkHotspot,
+        VideoSettings::videoSourceOpenCV
     };
     const QString videoSource = _videoSettings->videoSource()->rawValue().toString();
     return (videoSourceList.contains(videoSource) || autoStreamConfigured());
@@ -376,6 +374,7 @@ void VideoManager::_videoSourceChanged()
         }
     }
 
+            //qDebug()<<changed;
     if (changed) {
         emit hasVideoChanged();
         emit isStreamSourceChanged();
@@ -384,10 +383,13 @@ void VideoManager::_videoSourceChanged()
         if (hasVideo()) {
             _restartAllVideos();
         } else {
+            //qDebug()<<"No video";
             stopVideo();
         }
 
         qCDebug(VideoManagerLog) << "New Video Source:" << _videoSettings->videoSource()->rawValue().toString();
+        //qDebug() << "New Video Source:" << _videoSettings->videoSource()->rawValue().toString();
+
     }
 }
 
@@ -439,41 +441,42 @@ bool VideoManager::_updateAutoStream(VideoReceiver *receiver)
 
     QString source, url;
     switch (pInfo->type()) {
-    case VIDEO_STREAM_TYPE_RTSP:
-        source = VideoSettings::videoSourceRTSP;
-        url = pInfo->uri();
-        if (source == VideoSettings::videoSourceRTSP) {
-            _videoSettings->rtspUrl()->setRawValue(url);
-        }
-        break;
-    case VIDEO_STREAM_TYPE_TCP_MPEG:
-        source = VideoSettings::videoSourceTCP;
-        url = pInfo->uri();
-        break;
-    case VIDEO_STREAM_TYPE_RTPUDP:
-        if (pInfo->encoding() == VIDEO_STREAM_ENCODING_H265) {
-            source = VideoSettings::videoSourceUDPH265;
-            url = pInfo->uri().contains("udp265://") ? pInfo->uri() : QStringLiteral("udp265://0.0.0.0:%1").arg(pInfo->uri());
-        } else {
-            source = VideoSettings::videoSourceUDPH264;
-            url = pInfo->uri().contains("udp://") ? pInfo->uri() : QStringLiteral("udp://0.0.0.0:%1").arg(pInfo->uri());
-        }
-        break;
-    case VIDEO_STREAM_TYPE_MPEG_TS:
-        source = VideoSettings::videoSourceMPEGTS;
-        url = pInfo->uri().contains("mpegts://") ? pInfo->uri() : QStringLiteral("mpegts://0.0.0.0:%1").arg(pInfo->uri());
-        break;
-    default:
-        qCWarning(VideoManagerLog) << "Unknown VIDEO_STREAM_TYPE";
-        source = VideoSettings::videoSourceNoVideo;
-        url = pInfo->uri();
-        break;
+        case VIDEO_STREAM_TYPE_RTSP:
+            source = VideoSettings::videoSourceRTSP;
+            url = pInfo->uri();
+            if (source == VideoSettings::videoSourceRTSP) {
+                _videoSettings->rtspUrl()->setRawValue(url);
+            }
+            break;
+        case VIDEO_STREAM_TYPE_TCP_MPEG:
+            source = VideoSettings::videoSourceTCP;
+            url = pInfo->uri();
+            break;
+        case VIDEO_STREAM_TYPE_RTPUDP:
+            if (pInfo->encoding() == VIDEO_STREAM_ENCODING_H265) {
+                source = VideoSettings::videoSourceUDPH265;
+                url = pInfo->uri().contains("udp265://") ? pInfo->uri() : QStringLiteral("udp265://0.0.0.0:%1").arg(pInfo->uri());
+            } else {
+                source = VideoSettings::videoSourceUDPH264;
+                url = pInfo->uri().contains("udp://") ? pInfo->uri() : QStringLiteral("udp://0.0.0.0:%1").arg(pInfo->uri());
+            }
+            break;
+        case VIDEO_STREAM_TYPE_MPEG_TS:
+            source = VideoSettings::videoSourceMPEGTS;
+            url = pInfo->uri().contains("mpegts://") ? pInfo->uri() : QStringLiteral("mpegts://0.0.0.0:%1").arg(pInfo->uri());
+            break;
+        default:
+            qCWarning(VideoManagerLog) << "Unknown VIDEO_STREAM_TYPE";
+            source = VideoSettings::videoSourceNoVideo;
+            url = pInfo->uri();
+            break;
     }
 
     const bool settingsChanged = _updateVideoUri(receiver, url);
     if (settingsChanged) {
         if (!receiver->isThermal()) {
             _videoSettings->videoSource()->setRawValue(source);
+            qDebug()<<_videoSettings->videoSource()->rawValue();
         }
 
         emit autoStreamConfiguredChanged();
@@ -484,6 +487,7 @@ bool VideoManager::_updateAutoStream(VideoReceiver *receiver)
 
 bool VideoManager::_updateVideoUri(VideoReceiver *receiver, const QString &uri)
 {
+    //qDebug()<<uri;
     if (!receiver) {
         qCDebug(VideoManagerLog) << "VideoReceiver is NULL";
         return false;
@@ -523,6 +527,7 @@ bool VideoManager::_updateSettings(VideoReceiver *receiver)
     settingsChanged |= _updateAutoStream(receiver);
 
     const QString source = _videoSettings->videoSource()->rawValue().toString();
+    //qDebug()<<source;
     if (source == VideoSettings::videoSourceUDPH264) {
         settingsChanged |= _updateVideoUri(receiver, QStringLiteral("udp://%1").arg(_videoSettings->udpUrl()->rawValue().toString()));
     } else if (source == VideoSettings::videoSourceUDPH265) {
@@ -545,7 +550,14 @@ bool VideoManager::_updateSettings(VideoReceiver *receiver)
         settingsChanged |= _updateVideoUri(receiver, QStringLiteral("rtsp://192.168.43.1:8554/fpv_stream"));
     } else if ((source == VideoSettings::videoDisabled) || (source == VideoSettings::videoSourceNoVideo)) {
         settingsChanged |= _updateVideoUri(receiver, QString());
-    } else {
+    }
+    else if (source == VideoSettings::videoSourceOpenCV) {
+        //qDebug()<<"matches";
+        //qDebug() << "[VideoManager] Using OpenCV source";
+        settingsChanged |= _updateVideoUri(receiver, QStringLiteral("rtsp://admin:vikra@123@192.168.56.50:554/cam/realmonitor?channel=1&subtype=0"));
+        //qDebug()<<settingsChanged;
+    }
+    else {
         settingsChanged |= _updateVideoUri(receiver, QString());
         if (!isUvc()) {
             qCCritical(VideoManagerLog) << "Video source URI \"" << source << "\" is not supported. Please add support!";
@@ -557,17 +569,14 @@ bool VideoManager::_updateSettings(VideoReceiver *receiver)
 
 void VideoManager::_setActiveVehicle(Vehicle *vehicle)
 {
-    qCDebug(VideoManagerLog) << Q_FUNC_INFO << "new vehicle" << vehicle << "old active vehicle" << _activeVehicle;
-
     if (_activeVehicle) {
         (void) disconnect(_activeVehicle->vehicleLinkManager(), &VehicleLinkManager::communicationLostChanged, this, &VideoManager::_communicationLostChanged);
-        auto cameraManager = _activeVehicle->cameraManager();
-        if (cameraManager) {
-            MavlinkCameraControl *pCamera = cameraManager->currentCameraInstance();
+        if (_activeVehicle->cameraManager()) {
+            MavlinkCameraControl *pCamera = _activeVehicle->cameraManager()->currentCameraInstance();
             if (pCamera) {
                 pCamera->stopStream();
             }
-            (void) disconnect(cameraManager, &QGCCameraManager::streamChanged, this, &VideoManager::_videoSourceChanged);
+            (void) disconnect(_activeVehicle->cameraManager(), &QGCCameraManager::streamChanged, this, &VideoManager::_videoSourceChanged);
         }
 
         for (VideoReceiver *receiver : std::as_const(_videoReceivers)) {
@@ -631,6 +640,7 @@ void VideoManager::_restartVideo(VideoReceiver *receiver)
         _stopReceiver(receiver);
         // onStopComplete Signal Will Restart It
     } else {
+        //qDebug()<<"Last";
         _startReceiver(receiver);
     }
 }
@@ -676,7 +686,7 @@ void VideoManager::_startReceiver(VideoReceiver *receiver)
        So we should allow for some negotiation time for rtsp */
 
     const uint32_t timeout = ((source == VideoSettings::videoSourceRTSP) ? _videoSettings->rtspTimeout()->rawValue().toUInt() : 3);
-
+    //qDebug()<<timeout;
     receiver->start(timeout);
 }
 
@@ -695,28 +705,36 @@ void VideoManager::_initVideoReceiver(VideoReceiver *receiver, QQuickWindow *win
     void *sink = QGCCorePlugin::instance()->createVideoSink(receiver->widget(), receiver);
     if (!sink) {
         qCCritical(VideoManagerLog) << "createVideoSink() failed" << receiver->name();
+
+    }
+    else
+    {
+       //qDebug()<<"Video Sink created";
     }
     receiver->setSink(sink);
 
     (void) connect(receiver, &VideoReceiver::onStartComplete, this, [this, receiver](VideoReceiver::STATUS status) {
         if (!receiver) {
+
             return;
         }
 
         qCDebug(VideoManagerLog) << "Video" << receiver->name() << "Start complete, status:" << status;
+        //qDebug() << "Video" << receiver->name() << "Start complete, status:" << status;
+
         switch (status) {
-        case VideoReceiver::STATUS_OK:
-            receiver->setStarted(true);
-            if (receiver->sink()) {
-                receiver->startDecoding(receiver->sink());
-            }
-            break;
-        case VideoReceiver::STATUS_INVALID_URL:
-        case VideoReceiver::STATUS_INVALID_STATE:
-            break;
-        default:
-            _restartVideo(receiver);
-            break;
+            case VideoReceiver::STATUS_OK:
+                receiver->setStarted(true);
+                if (receiver->sink()) {
+                    receiver->startDecoding(receiver->sink());
+                }
+                break;
+            case VideoReceiver::STATUS_INVALID_URL:
+            case VideoReceiver::STATUS_INVALID_STATE:
+                break;
+            default:
+                _restartVideo(receiver);
+                break;
         }
     });
 
@@ -790,21 +808,36 @@ void VideoManager::_initVideoReceiver(VideoReceiver *receiver, QQuickWindow *win
         (void) _updateAutoStream(receiver);
     });
 
+    connect(receiver, &VideoReceiver::is_rectangle, this, [this, receiver](const QRectF &rect) {
+        _rectangle = rect;
+        //qDebug()<<_rectangle.x()<<_rectangle.width();
+        emit rectangle_boxChanged();
+    });
+
+    connect(receiver, &VideoReceiver::is_box, this, [this, receiver](bool detected) {
+        is_detect = detected;
+        emit detectChanged();
+    });
+    QObject::disconnect(this, &VideoManager::trackChanged, nullptr, nullptr);
+    connect(this, &VideoManager::trackChanged, receiver, &VideoReceiver::onTrackChanged);
+
+
     (void) _updateSettings(receiver);
 
     _videoReceivers.append(receiver);
 
     if (hasVideo()) {
+        //qDebug()<<"Source found";
         _startReceiver(receiver);
     }
 }
 
 void VideoManager::startVideo()
 {
-    qCDebug(VideoManagerLog) << "startVideo";
-
+   // qDebug()<<"Starting point";
     if (!hasVideo()) {
         qCDebug(VideoManagerLog) << "Stream not enabled/configured";
+        //qDebug()<<"Source found";
         return;
     }
 
@@ -816,16 +849,15 @@ void VideoManager::startVideo()
 FinishVideoInitialization::FinishVideoInitialization()
     : QRunnable()
 {
-    // qCDebug(VideoManagerLog) << this;
+   // qCDebug(VideoManagerLog) << this;
 }
 
 FinishVideoInitialization::~FinishVideoInitialization()
 {
-    // qCDebug(VideoManagerLog) << this;
+   // qCDebug(VideoManagerLog) << this;
 }
 
 void FinishVideoInitialization::run()
 {
-    qCDebug(VideoManagerLog) << "FinishVideoInitialization::run";
-    VideoManager::instance()->_initAfterQmlIsReady();
+    VideoManager::instance()->startVideo();
 }

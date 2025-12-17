@@ -5,6 +5,9 @@
 qt_add_library(QGroundControlModule STATIC)
 
 # ----------------------------------------------------------------------------
+
+target_link_libraries(QGroundControlModule PRIVATE Qt6::Core)
+target_link_libraries(QGroundControlModule PRIVATE Qt6::Core)
 # QML Resources
 # ----------------------------------------------------------------------------
 set_source_files_properties(UI/MainWindow.qml
@@ -21,6 +24,7 @@ qt_add_qml_module(QGroundControlModule
     IMPORTS
         QGC
     NO_PLUGIN
+
 )
 
 # ============================================================================
@@ -229,7 +233,9 @@ target_precompile_headers(${CMAKE_PROJECT_NAME} PRIVATE pch.h)
 if(QGC_CUSTOM_BUILD)
     if(CUSTOM_QT_COMPONENTS)
         find_package(Qt6 REQUIRED COMPONENTS ${CUSTOM_QT_COMPONENTS})
-    endif()
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+endif()
 
     if(CUSTOM_SOURCES)
         target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${CUSTOM_SOURCES})

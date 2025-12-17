@@ -22,7 +22,7 @@ class VideoReceiver : public QObject
     Q_OBJECT
     QML_ELEMENT
     QML_UNCREATABLE("")
-public:
+   public:
     explicit VideoReceiver(QObject *parent = nullptr)
         : QObject(parent)
     {}
@@ -45,8 +45,10 @@ public:
     void setStarted(bool started) { if (started != _started) { _started = started; emit startedChanged(_started); } }
     void setLowLatency(bool lowLatency) { if (lowLatency != _lowLatency) { _lowLatency = lowLatency; emit lowLatencyChanged(_lowLatency); } }
     void setVideoStreamInfo(QGCVideoStreamInfo *videoStreamInfo) { if (videoStreamInfo != _videoStreamInfo) { _videoStreamInfo = videoStreamInfo; emit videoStreamInfoChanged(); } }
+    void set_track(bool value){/*static int val;*/track_mode=value;/*qDebug()<<track_mode;*/}
+    void onTrackChanged(bool value){set_track(value);};
 
-    // QMediaFormat::FileFormat
+            // QMediaFormat::FileFormat
     enum FILE_FORMAT {
         FILE_FORMAT_MIN = 0,
         FILE_FORMAT_MKV = FILE_FORMAT_MIN,
@@ -69,7 +71,7 @@ public:
     Q_ENUM(STATUS)
     static bool isValidStatus(STATUS status) { return ((status >= STATUS_MIN) && (status <= STATUS_MAX)); }
 
-signals:
+   signals:
     void timeout();
     void streamingChanged(bool active);
     void decodingChanged(bool active);
@@ -92,8 +94,9 @@ signals:
     void onStartRecordingComplete(STATUS status);
     void onStopRecordingComplete(STATUS status);
     void onTakeScreenshotComplete(STATUS status);
-
-public slots:
+    void is_rectangle(QRectF);
+    void is_box(bool);
+   public slots:
     virtual void start(uint32_t timeout) = 0;
     virtual void stop() = 0;
     virtual void startDecoding(void *sink) = 0;
@@ -102,7 +105,7 @@ public slots:
     virtual void stopRecording() = 0;
     virtual void takeScreenshot(const QString &imageFile) = 0;
 
-protected:
+   protected:
     void *_sink = nullptr;
     QQuickItem *_widget = nullptr;
     QGCVideoStreamInfo *_videoStreamInfo = nullptr;
@@ -129,6 +132,8 @@ protected:
     uint32_t _timeout = 0;
     QString _recordingOutput;
 
+   public:
+    bool track_mode=false;
     // bool _initialized = false;
     // bool _fullScreen = false;
     // QSize _videoSize;

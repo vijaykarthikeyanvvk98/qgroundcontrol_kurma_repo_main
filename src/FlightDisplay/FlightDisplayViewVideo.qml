@@ -17,6 +17,7 @@ import QGroundControl.FlightMap
 
 import QGroundControl.Controls
 
+//import Worker 1.0
 
 
 
@@ -42,6 +43,12 @@ Item {
     property bool   _isMode_FIT_HEIGHT: _fitMode === 1
     property bool   _isMode_FILL:       _fitMode === 2
     property bool   _isMode_NO_CROP:    _fitMode === 3
+
+    property int box_x: 0
+    property int box_y: 0
+    property real box_w: 0.0
+    property real box_h: 0.0
+    property bool box_visible: false
 
     function getWidth() {
         return videoBackground.getWidth()
@@ -233,4 +240,112 @@ Item {
             property int zoom: 0
         }
     }
+
+    Connections {
+        target: liveImageProvider
+
+        function onImageChanged() {
+            opencvImage.reload()
+            opencvImage.visible = true
+            //console.log("true")
+        }
+
+        function onNull_image_changed() {
+            //opencvImage.null_reload()
+        }
+    }
+
+    /*Image {
+        id: opencvImage
+        anchors.fill: parent
+        fillMode: /*cam.height > root.height / 2 ? Image.PreserveAspectFit //:*/ //Image.NoOption
+        //sourceSize.width: 1080
+        //sourceSize.height:1080
+       /* property bool counter: false
+        visible: true//QGroundControl.videoManager.decoding
+        //source: "image://live/image"
+        //source: "qrc:/resources/images/dummy_template3.jpg"
+        asynchronous: false
+        cache: false
+        clip: true
+        function reload() {
+            counter = !counter
+            source = "image://live/image?id=" + counter
+        }
+
+        function null_reload() {
+            //source = "qrc:/resources/images/dummy_template3.jpg"
+        }
+    }*/
+
+
+
+
+    Rectangle {
+        id: imageRect
+        anchors.fill: parent
+        color: "transparent"
+        border.color: "white"
+        //border.width: 3
+        //visible: front_visible
+        z: 0
+        Image {
+            id: opencvImage
+            anchors.fill: parent
+            fillMode:Image.NoOption
+            property bool counter: false
+            visible: true
+            source: "image://live/image"
+            asynchronous: false
+            cache: false
+            clip: true
+
+            function reload() {
+                counter = !counter
+                source = "image://live/image?id=" + counter
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+
+            onClicked: {
+                //VideoStreamer.pause_streaming()
+                //model.visible = true
+            }
+
+            onDoubleClicked: {
+                //VideoStreamer.resume_streaming()
+                //model.visible = false
+            }
+        }
+
+        Rectangle {
+            id: imageRect2
+
+
+            /*x: VideoStreamer.rectangle.x* root.width / 1000
+            y: VideoStreamer.rectangle.y* root.height / 1000
+            width: VideoStreamer.rectangle.width * root.width / 1000
+            height: VideoStreamer.rectangle.height* root.height / 1000*/
+            x: QGroundControl.videoManager.rectangle_box.x// box_x// Worker.rectangle.x
+            y: QGroundControl.videoManager.rectangle_box.y//box_y//Worker.rectangle.y
+            width: QGroundControl.videoManager.rectangle_box.width//box_w//Worker.rectangle.width
+            height: QGroundControl.videoManager.rectangle_box.height//box_h//Worker.rectangle.height
+
+            // This Behavior block will automatically animate
+            // the changes to the 'x' and 'y' properties
+            Behavior on x {
+                SmoothedAnimation { velocity: 400 }
+            }
+            Behavior on y {
+                SmoothedAnimation { velocity: 400 }
+            }
+            color:"transparent"
+            border.color: "red"
+            border.width: 0.0025*root.width
+            visible:QGroundControl.videoManager.detect//box_visible//Worker.detect
+        }
+    }
+
 }
