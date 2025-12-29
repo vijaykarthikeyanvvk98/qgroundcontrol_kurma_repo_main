@@ -3872,6 +3872,8 @@ void Vehicle::clearAllParamMapRC(void)
 
 void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, float thrust, quint16 buttons, quint16 buttons2)
 {
+    // Block joystick MANUAL_CONTROL in Object Detect mode
+
     SharedLinkInterfacePtr sharedLink = vehicleLinkManager()->primaryLink().lock();
     if (!sharedLink) {
         qCDebug(VehicleLog)<< "sendJoystickDataThreadSafe: primary link gone!";
@@ -3883,6 +3885,22 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
     }
 
     mavlink_message_t message;
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+
+    if (_objectDetectActive &&
+        (now - _objectDetectLastTs) > kObjectDetectTimeoutMs)
+    {
+        _objectDetectActive = false;
+        emit objectDetectActiveChanged(_objectDetectActive);
+    }
+    finalYaw = yaw;
+    if (_objectDetectActive)
+    {
+        finalYaw += assistGain * _objectDetectYaw;
+        finalYaw = qBound(-1.0f, finalYaw, 1.0f);
+        //return;
+    }
+    yaw=_objectDetectYaw;
 
             // Incoming values are in the range -1:1
     float axesScaling =         1.0 * 1000.0;
@@ -3891,6 +3909,7 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
     float newYawCommand    =    yaw * axesScaling;
     float newThrustCommand =    thrust * axesScaling;
 
+    //qDebug()<<roll<<pitch<<yaw;
     mavlink_msg_manual_control_pack_chan(
         static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
         static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
@@ -4445,6 +4464,30 @@ void Vehicle::_createCameraManager()
     if (!_cameraManager && _firmwarePlugin) {
         _cameraManager = _firmwarePlugin->createCameraManager(this);
         emit cameraManagerChanged();
+    }
+}
+
+void Vehicle::setObjectDetectActive(bool active)
+{
+    if (_objectDetectActive == active)
+        return;
+
+    _objectDetectActive = active;
+    emit objectDetectActiveChanged(_objectDetectActive);
+}
+
+void Vehicle::setObjectDetectYaw(float yaw)
+{
+    yaw = qBound(-1.0f, yaw, 1.0f);
+
+    /*if (qFuzzyCompare(_objectDetectYaw, yaw))
+        return;*/
+
+    _objectDetectYaw = yaw;
+    _objectDetectLastTs = QDateTime::currentMSecsSinceEpoch();
+    if (!_objectDetectActive) {
+        _objectDetectActive = true;
+        emit objectDetectYawChanged(_objectDetectYaw);
     }
 }
 

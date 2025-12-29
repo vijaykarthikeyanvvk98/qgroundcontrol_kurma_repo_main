@@ -26,10 +26,13 @@ class WinchSettings:public QObject
     void run_actuator(int);
     void processResponse();
     void parse_String(QByteArray);
-
+    void winch_motor_actuator(int,int);
    private:
     QUdpSocket *receive_socket=nullptr;
     QTimer *timer=nullptr;
+    int motor_device =1;
+    int actuator_device=2;
+    int motor_value, actuator_value=0;
     QHostAddress senderAddress=QHostAddress("192.168.2.10");
     quint16 senderPort=10055;
     QHostAddress receiverAddress;

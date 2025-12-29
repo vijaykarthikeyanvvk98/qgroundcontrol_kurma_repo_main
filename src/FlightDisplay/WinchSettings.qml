@@ -138,7 +138,10 @@ Rectangle
 
                     onClicked:
                     {
-                        _winch.run_motor(1)
+                        //_winch.run_motor(1)
+                        _winch.winch_motor_actuator(0,1);
+                        motor_value=1;
+
                     }
                 }
             }
@@ -171,7 +174,10 @@ Rectangle
 
                     onClicked:
                     {
-                        _winch.run_motor(0)
+                        //_winch.run_motor(0)
+                        _winch.winch_motor_actuator(0,0);
+                        motor_value = 0;
+
                     }
                 }
             }
@@ -204,7 +210,10 @@ Rectangle
 
                     onClicked:
                     {
-                        _winch.run_motor(2)
+                        //_winch.run_motor(2)
+                        _winch.winch_motor_actuator(0,2);
+                        motor_value = 2;
+
                     }
                 }
             }
@@ -260,7 +269,9 @@ Rectangle
 
                     onClicked:
                     {
-                        _winch.run_actuator(1)
+                        //_winch.run_actuator(1)
+                        _winch.winch_motor_actuator(1,1);
+                        actuator_value = 1;
                     }
                 }
             }
@@ -292,7 +303,10 @@ Rectangle
 
                     onClicked:
                     {
-                        _winch.run_actuator(0)
+                        //_winch.run_actuator(0)
+                        _winch.winch_motor_actuator(1,0);
+                        actuator_value = 0;
+
                     }
                 }
             }
@@ -324,7 +338,9 @@ Rectangle
 
                     onClicked:
                     {
-                        _winch.run_actuator(2)
+                        //_winch.run_actuator(2)
+                        _winch.winch_motor_actuator(1,2);
+                        actuator_value=2;
                     }
                 }
             }

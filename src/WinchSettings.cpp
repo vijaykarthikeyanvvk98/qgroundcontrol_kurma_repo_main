@@ -48,9 +48,10 @@ void WinchSettings::run_motor(int value)
 {
     QByteArray buffer;
     buffer.append("@CMD:");
-    buffer.append(1);
+   // buffer.append(1);
+    buffer.append(QByteArray::number(motor_device));
     buffer.append(":");
-    buffer.append(value);
+    buffer.append(QByteArray::number(value));
     buffer.append(":");
     buffer.append("#");
     sendDatagram(buffer);
@@ -61,9 +62,10 @@ void WinchSettings::run_actuator(int value)
 {
     QByteArray buffer;
     buffer.append("@CMD:");
-    buffer.append(2);
+    //buffer.append(2);
+    buffer.append(QByteArray::number(actuator_device));
     buffer.append(":");
-    buffer.append(value);
+    buffer.append(QByteArray::number(value));
     buffer.append(":");
     buffer.append("#");
     sendDatagram(buffer);
@@ -131,3 +133,66 @@ void WinchSettings::parse_String(QByteArray data)
 
     }
 }
+//void WinchSettings::winch_motor_actuator(int mode, int value)
+//{
+    //qDebug()<<mode<<value;
+  //  switch(mode)
+    //{
+      //  case 0:
+        //    motor_value = value;
+          //  break;
+
+        //case 1:
+          //  actuator_value=value;
+            //break;
+
+        //default:
+          //  break;
+    //}
+    //qDebug()<<mode<<value;
+
+    //QByteArray buffer;
+    //buffer.append("@CMD");
+    //buffer.append(":");
+    //buffer.append(QByteArray::number(device));
+    //buffer.append(":");
+    //buffer.append(QByteArray::number(motor_value));
+    //buffer.append(":");
+    //buffer.append("#");
+    //buffer.append("@CMD");
+    //buffer.append(":");
+    //buffer.append(QByteArray::number(device));
+    //buffer.append(":");
+    //buffer.append(QByteArray::number(actuator_value));
+    //buffer.append(":");
+    //buffer.append("#");
+    //sendDatagram(buffer);
+    //buffer.clear();
+//}
+void WinchSettings::winch_motor_actuator(int mode, int value)
+{
+    //qDebug()<<mode<<value;
+    QByteArray buffer;
+    if(mode==0)
+    {
+       // motor_value = value;
+        buffer.append("@CMD:");
+        buffer.append(QByteArray::number(motor_device));
+        buffer.append(":");
+        buffer.append(QByteArray::number(value));
+        buffer.append(":");
+        buffer.append("#");
+    }
+    else if(mode==1)
+    {
+        //actuator_value=value;
+        buffer.append("@CMD:");
+        buffer.append(QByteArray::number(actuator_device));
+        buffer.append(":");
+        buffer.append(QByteArray::number(value));
+        buffer.append(":");
+        buffer.append("#");
+    }
+    sendDatagram(buffer);
+}
+

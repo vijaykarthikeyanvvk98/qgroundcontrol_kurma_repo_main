@@ -124,6 +124,7 @@ ArduSubFirmwarePlugin::ArduSubFirmwarePlugin(QObject *parent)
         { _acroFlightMode           , APMSubMode::ACRO              , true , true },
         { _altHoldFlightMode        , APMSubMode::ALT_HOLD          , true , true },
         { _autoFlightMode           , APMSubMode::AUTO              , true , true },
+        { _objectDetectFlightMode   , APMSubMode::MANUAL            , true , true },
         { _guidedFlightMode         , APMSubMode::GUIDED            , true , true },
         { _circleFlightMode         , APMSubMode::CIRCLE            , true , true },
         { _surfaceFlightMode        , APMSubMode::SURFACE           , true , true },

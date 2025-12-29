@@ -1482,6 +1482,27 @@ private:
 
     QGCCameraManager *_cameraManager = nullptr;
 
+private:
+    Q_PROPERTY(bool  objectDetectActive READ objectDetectActive WRITE setObjectDetectActive NOTIFY objectDetectActiveChanged)
+    Q_PROPERTY(float objectDetectYaw    READ objectDetectYaw    WRITE setObjectDetectYaw    NOTIFY objectDetectYawChanged)
+public:
+    bool  objectDetectActive() const { return _objectDetectActive; }
+    float objectDetectYaw()    const { return _objectDetectYaw; }
+public slots:
+    void setObjectDetectActive(bool active);
+    void setObjectDetectYaw(float yaw);
+private:
+    bool  _objectDetectActive = false;
+    float _objectDetectYaw    = 1.5f;   // range: -1.0 .. +1.
+    qint64    _objectDetectLastTs = 0;
+    static constexpr qint64 kObjectDetectTimeoutMs = 500;
+    float finalYaw=0.0f;
+    static constexpr float assistGain = 0.6f;   // tune 0.3–0.8
+
+signals:
+    void objectDetectActiveChanged(bool active);
+    void objectDetectYawChanged(float yaw);
+
 /*---------------------------------------------------------------------------*/
 };
 Q_DECLARE_METATYPE(Vehicle::MavCmdResultFailureCode_t)

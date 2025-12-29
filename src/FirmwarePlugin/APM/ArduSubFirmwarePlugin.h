@@ -130,6 +130,7 @@ protected:
     const QString _altHoldFlightMode = tr("Depth Hold");
     const QString _autoFlightMode = tr("Auto");
     const QString _guidedFlightMode = tr("Guided");
+    const QString _objectDetectFlightMode = tr("Detection");
     const QString _circleFlightMode = tr("Circle");
     const QString _surfaceFlightMode = tr("Surface");
     const QString _posHoldFlightMode =tr("Position Hold");

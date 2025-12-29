@@ -57,6 +57,7 @@ QString FirmwarePlugin::flightMode(uint8_t base_mode, uint32_t custom_mode) cons
         { MAV_MODE_FLAG_GUIDED_ENABLED, "Guided" },
         { MAV_MODE_FLAG_AUTO_ENABLED, "Auto" },
         { MAV_MODE_FLAG_TEST_ENABLED, "Test" },
+
     };
 
     QString flightMode;

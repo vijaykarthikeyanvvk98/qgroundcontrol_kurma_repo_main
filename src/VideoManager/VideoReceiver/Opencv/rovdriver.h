@@ -92,4 +92,12 @@ private:
     QTimer* m_testTimer = nullptr;
     int m_testState = 0; // 0: Idle, 1: Forward, 2: Backward, 3: Left, 4: Right, 5: Done
     // ... existing members (like mutex) ...
+    float _yawError = 0;
+    float _yawIntegral = 0;
+    float _yawPrevError = 0;
+    QElapsedTimer _pidTimer;
+    static constexpr float Kp = 0.8f;
+    static constexpr float Ki = 0.0f;
+    static constexpr float Kd = 0.15f;
+    float dt =0.0f;
 };

@@ -1,4 +1,4 @@
-#include "rovdriver.h"
+# include "rovdriver.h"
 #include "MavlinkAction.h"
 #include "MavlinkActionManager.h"
 #include "MavlinkActionsSettings.h"
@@ -39,8 +39,8 @@ ROVDriver::ROVDriver(QObject *parent)
     // ... existing initialization code ...
 
     // Initialize the test timer
-    m_testTimer = new QTimer(this);
-    m_testTimer->setInterval(1000); // 1 second per step
+    //m_testTimer = new QTimer(this);
+    //m_testTimer->setInterval(1000); // 1 second per step
     //m_testTimer->setSingleShot(true); // The timer only fires once per state
 
     // Connect the timer to the state machine slot
@@ -251,7 +251,7 @@ void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCente
         steer = int(1500 - (distance * 1.1));
     }
 
-    steer = std::clamp(steer, 1000, 2000);
+    steer = std::clamp(steer, 1100, 1900);
 
             // --- Throttle ---
     int thr = int(1500 + (distance * 1.5));
@@ -263,8 +263,8 @@ void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCente
             // --- Assign outputs ---
     int roll     = 1500;      // neutral
     int pitch    = 1500;      // neutral
-    int yaw      = steer;
-    int throttle = thr;
+    int yaw      = 1600;//steer;
+    int throttle = 0;//thr;
 
     // Map motions to joystick axes
     /*int roll     = 1500 + qBound(-300, int(dx * 1.2), 300);       // sway ←→
@@ -277,7 +277,8 @@ void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCente
     yaw      = std::clamp(yaw,      1100, 1900);
     throttle = std::clamp(throttle, 1100, 1900);*/
 
-    //qDebug()<<roll<<pitch;
+    //qDebug()<<yaw;
+
     sendRCOverride2(roll,pitch,yaw,throttle,0,0);
 }
 
@@ -346,8 +347,10 @@ void ROVDriver::sendRCOverride2(float roll, float pitch , float yaw, float thrus
     if (sharedLink->linkConfiguration()->isHighLatency()) {
         return;
     }
+    vehicle->setObjectDetectActive(true);
+    vehicle->setObjectDetectYaw(yaw);
 
-    mavlink_message_t message;
+    /*mavlink_message_t message;
 
             // Incoming values are in the range -1:1
     float axesScaling =         1.0 * 1000.0;
@@ -375,7 +378,7 @@ void ROVDriver::sendRCOverride2(float roll, float pitch , float yaw, float thrus
     if (sharedLink) {
         //qDebug()<<thrust;
     sendMessageOnLinkThreadSafe(sharedLink.get(),message);
-    }
+    }*/
 }
 
 void ROVDriver::setTarget(const QString &address, quint16 port)
@@ -426,6 +429,5 @@ int ServoPLL::update(const Rect &detected, Size frameSize)
     if (area_error == 0 && pos_error == 0)
         servo_signal = servo_center;
 
-            //qDebug()<<servo_signal;
     return servo_signal;
 }

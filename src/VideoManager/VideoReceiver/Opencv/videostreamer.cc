@@ -261,7 +261,7 @@ void VideoStreamer::openVideoCamera(QString path)
         cap.release();
     else;
 
-    cap.open("udpsrc port=5000 ! "
+    cap.open("udpsrc port=5600 ! "
         "application/"
         "x-rtp,encoding-name=H264,payload="
         "96 ! rtph264depay   ! avdec_h264  ! videoconvert ! appsink drop=true sync=false max-buffers=1", cv::CAP_GSTREAMER);
@@ -569,6 +569,7 @@ void Worker::grabImage()
                 h = output.at<float>(0, 3, i);
                 conf = output.at<float>(0, 4, i);
 
+                //qDebug()<<conf<<CONFIDENCE_THRESHOLD;
                 if (conf >= CONFIDENCE_THRESHOLD)
                 {
 
