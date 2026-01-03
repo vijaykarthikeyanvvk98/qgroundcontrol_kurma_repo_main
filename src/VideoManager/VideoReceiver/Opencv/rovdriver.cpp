@@ -37,7 +37,7 @@ ROVDriver::ROVDriver(QObject *parent)
     : running(true), connected(false), rc_channels(8, 1500)
 {
     // ... existing initialization code ...
-
+    _pidTimer.start();
     // Initialize the test timer
     //m_testTimer = new QTimer(this);
     //m_testTimer->setInterval(1000); // 1 second per step
@@ -152,6 +152,15 @@ void ROVDriver::_sendTimedCommand()
         m_movementTimer->stop();
     }
 }
+
+float ROVDriver::computeVisionGain(float distance)
+{
+    constexpr float minGain = 0.2f;
+    constexpr float maxGain = 0.8f;
+
+    float gain = maxGain - distance * (maxGain - minGain);
+    return qBound(minGain, gain, maxGain);
+}
 void ROVDriver::_run() {
     while (running) {
         if (!connected) {
@@ -208,6 +217,20 @@ void ROVDriver::stop() {
 
 bool ROVDriver::isConnected() const { return connected; }
 
+float ROVDriver::computeYaw(float error)
+{
+    dt = _pidTimer.restart() / 1000.0f;
+
+
+    _yawIntegral += error * dt;
+    float derivative = (error - _yawPrevError) / dt;
+
+    _yawPrevError = error;
+
+    float output = Kp * error + Ki * _yawIntegral + Kd * derivative;
+    return qBound(-1.0f, output, 1.0f);
+}
+
 void ROVDriver::sendRC(int throttle, int steering) {
     QMutexLocker locker(&mutex);
     commandQueue.enqueue({"rc", QVariantList() << throttle << steering});
@@ -239,7 +262,9 @@ void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCente
 
     double dx = blobCenter.x() - frameCenter.x();   // left/right
     double dy = blobCenter.y() - frameCenter.y();   // up/down
-
+    double halfWidth = frameCenter.x();   // assuming frameCenter.x() = width/2
+    float normalizedError = dx / halfWidth; // → [-1, 1]
+    normalizedError = std::clamp(normalizedError, -1.0f, 1.0f);
     double distance = std::sqrt(dx*dx + dy*dy);
     double angle    = qRadiansToDegrees(std::atan2(dy, dx));
     // --- YAW / Steering ---
@@ -265,7 +290,8 @@ void ROVDriver::followDiver(const QPointF &frameCenter, const QPointF &blobCente
     int pitch    = 1500;      // neutral
     int yaw      = 1600;//steer;
     int throttle = 0;//thr;
-
+    pidYaw = computeYaw(normalizedError);
+    //gain = computeVisionGain(distance);
     // Map motions to joystick axes
     /*int roll     = 1500 + qBound(-300, int(dx * 1.2), 300);       // sway ←→
     int pitch    = 1500 + qBound(-300, int(distance * 0.8), 300);     // surge ↑↓
@@ -348,7 +374,8 @@ void ROVDriver::sendRCOverride2(float roll, float pitch , float yaw, float thrus
         return;
     }
     vehicle->setObjectDetectActive(true);
-    vehicle->setObjectDetectYaw(yaw);
+    //vehicle->setObjectDetectYaw(yaw);
+    vehicle->setObjectDetectYaw(pidYaw);
 
     /*mavlink_message_t message;
 

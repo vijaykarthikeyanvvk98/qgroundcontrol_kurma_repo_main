@@ -42,7 +42,7 @@ public:
     ~ROVDriver();
     void stop();
     bool isConnected() const;
-
+    float computeYaw(float error);
     void sendRC(int throttle = 1500, int steering = 1500);
     void sendROVControl(int forward, int yaw, int vertical, int strafe);
     void arm();
@@ -53,6 +53,7 @@ public:
     void _run();
     bool sendMessageOnLinkThreadSafe(LinkInterface* link, mavlink_message_t message);
     void _sendTimedCommand();
+    float computeVisionGain(float distance);
    public slots:
     Q_INVOKABLE void startThrusterTest();
     Q_INVOKABLE void stopThrusterTest();
@@ -100,4 +101,9 @@ private:
     static constexpr float Ki = 0.0f;
     static constexpr float Kd = 0.15f;
     float dt =0.0f;
+    float pidYaw=0.0f;
+    static constexpr float minGain = 0.2f;
+    static constexpr float maxGain = 0.8f;
+
+    float gain =0.0f;
 };

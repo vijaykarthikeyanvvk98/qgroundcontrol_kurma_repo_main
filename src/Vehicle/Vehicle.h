@@ -1495,7 +1495,7 @@ private:
     bool  _objectDetectActive = false;
     float _objectDetectYaw    = 1.5f;   // range: -1.0 .. +1.
     qint64    _objectDetectLastTs = 0;
-    static constexpr qint64 kObjectDetectTimeoutMs = 500;
+    static constexpr qint64 kObjectDetectTimeoutMs = 1000;
     float finalYaw=0.0f;
     static constexpr float assistGain = 0.6f;   // tune 0.3–0.8
 

@@ -3891,7 +3891,9 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
         (now - _objectDetectLastTs) > kObjectDetectTimeoutMs)
     {
         _objectDetectActive = false;
+        _objectDetectYaw=0.0f;
         emit objectDetectActiveChanged(_objectDetectActive);
+        emit objectDetectYawChanged(0.0f);
     }
     finalYaw = yaw;
     if (_objectDetectActive)
@@ -3900,7 +3902,7 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
         finalYaw = qBound(-1.0f, finalYaw, 1.0f);
         //return;
     }
-    yaw=_objectDetectYaw;
+    yaw=finalYaw;
 
             // Incoming values are in the range -1:1
     float axesScaling =         1.0 * 1000.0;
